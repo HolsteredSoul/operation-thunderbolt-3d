@@ -2,7 +2,7 @@
 
 ## Current state
 
-The survival game now includes the user-requested atmosphere and accessibility pass: weathered scenery and smoke, gentler controller handling, Recruit/Standard difficulty, and selectable Off/3°/5° assistance. The user rejected excessive aiming overlays: retain just one small controller direction chevron or compact mouse crosshair, with no dashed line or aim text. Existing Blender character models are preserved.
+The survival game now includes the user-requested atmosphere and accessibility pass: weathered scenery and smoke, gentler controller handling, Recruit/Standard difficulty, and selectable Off/3°/5° assistance. The user rejected excessive aiming overlays: retain just one small controller direction chevron or compact mouse crosshair, with no dashed line or aim text. The following Blender asset pass refined soldier clothing/helmets and scenery, then added ten architecture/landscape asset families. The pack now has 19 families; the pre-pass scene is saved in `assets/before-asset-refinement.blend`.
 
 Physical Xbox Bluetooth operation was user-confirmed in Chrome before this pass; current subjective stick feel and in-app preview support require separate human assessment. Windows users can double-click `gamestart.cmd`. The personal repository is https://github.com/HolsteredSoul/operation-thunderbolt-3d; publishing configuration should be checked on GitHub when relevant.
 
@@ -16,7 +16,8 @@ Physical Xbox Bluetooth operation was user-confirmed in Chrome before this pass;
 6. Controller preference: left-stick movement/facing, optional right-stick override, and selectable assistance (12-degree cone; default 50% correction capped at 5°, optional 25%/3° or Off; no accumulating lock). Gentle stick feel is the default. Keep mouse aiming unassisted. Do not restore mandatory twin-stick aiming or full automatic targeting without a user request.
 7. Verify changed behavior and separate controlled tests, ordinary browser playthroughs, and human hardware testing. Simulated gamepads do not prove physical input. Preserve power-on/click/press-A guidance; pairing alone is not live connectivity.
 8. Keep runtime assets and rendering dependencies local. No additional runtime services are required.
-9. Keep documentation current and concise. Use Git history for completed work rather than session journals; update this current-state summary when needed. Do not add workflow-enforcement hooks unless the user asks after repeated convention failures.
+9. Asset priority: the user considers 60 FPS aspirational and roughly 40 FPS acceptable. Favor richer, better-shaped assets over removing detail merely to meet 60 FPS; still measure performance and preserve gameplay readability.
+10. Keep documentation current and concise. Use Git history for completed work rather than session journals; update this current-state summary when needed. Do not add workflow-enforcement hooks unless the user asks after repeated convention failures.
 
 ## Run and verify
 

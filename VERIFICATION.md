@@ -162,3 +162,26 @@ These short runs show ongoing survival pressure and working recovery, not a meas
 At the 34-enemy cap in headed Chrome 152 / Intel Iris Xe / 1920×1080 / DPR 1, the final batched-smoke pass measured **55.8 FPS High** (30.0 ms p95) and **57.5 FPS Low** (29.9 ms p95), with about 84–85 draw calls. The initial atmosphere pass measured 44.4 FPS High with 108 draws. Other game previews were open; this is not a controlled cross-version benchmark or a locked-60 guarantee. This pass does not meet a 60 FPS mean at the measured full-cap workload.
 
 Local raw evidence: `output/accessibility-browser-final.txt`, `output/atmosphere-browser-checks.txt`, `output/atmosphere-controller-checks.txt`, `output/atmosphere-console.txt`, `output/recruit-playthrough.txt`, `output/atmosphere-performance-final.txt`, and `output/playwright/atmosphere-*.png`. Raw output stays gitignored.
+
+
+## Blender asset refinement and village architecture — 6 September 2026
+
+Authored through Blender MCP in the existing Thunderbolt Asset Workshop scene, using Solid viewport and no GPU renders. The previous workshop is preserved as `assets/before-asset-refinement.blend`; the separate cottage file is unchanged.
+
+Refined the original assets: fractured wall courses with split faces and impact scars, warped crate boards and braces, staggered compressed sandbags with tied ends, angular brick/timber rubble, modest cloth/helmet deformation, facial proportions, and weapon slings. The export now preserves baked corner wear colors and appropriate smooth/flat normals. Character animation joints and weapon pivots remain intact.
+
+Added ten modules: plastered walls, broken window surrounds, chimney remnants, burned timber frames, collapsed slate roofs, supply barrels, charred trees, branching oaks, broken fences, and grass clumps. Architecture substitutes for existing wall/crate/rubble visuals; it does not alter navigation or collision data. Rectangular cover keeps its dimensions when rotated. Tree trunks and fences are placed outside the arena; low grass remains decorative.
+
+The `THUNDER-1944` review layout contained 5 chimney sections, 7 broken windows, 11 plastered sections, 4 timber frames, 3 roof-debris piles, 49 charred trees, 96 oaks, 49 fence sections, and 183 grass clumps, alongside the original cover types. Barrel appearances are seed-dependent; the standalone gallery verifies that asset separately.
+
+Verification:
+
+- Validated all 19 exported asset families (29,263 triangles total in the library; 6.04 MB JSON): finite positions/normals/colors, matching attribute lengths, triangle alignment, pivots, and expected cover widths.
+- Four enemy-role mesh-targeting checks passed after the final architecture export.
+- Fifteen existing browser control/targeting/state checks passed after the base asset refinement; controls and combat logic were not changed by the subsequent landscape additions.
+- Visually reviewed both the standalone asset galleries and actual village placement. Wall/sandbag triangle counts fell from 1,356/3,312 to 977/2,024; the additional architectural assets provide detail and variation elsewhere.
+- Full 34-enemy stress test, headed Chrome 152 / Intel Iris Xe / 1920×1080 / DPR 1: 61.2 FPS mean High (20.2 ms p95), 65.6 FPS Low (20.1 ms p95), approximately 382k triangles and 112–113 draws. Other previews were open, so these are short-run observations, not a controlled cross-version optimization claim or locked frame rate.
+
+The user explicitly prioritizes refined assets and accepts approximately 40 FPS; 60 FPS is aspirational. No further reduction in asset detail was needed for the measured workload. No full combat rebalance or simulation change was made during this asset pass.
+
+Reproduction: Blender functions in `assets/refine-assets.py`; export via `assets/export-character-pack.py`; browser galleries in `tests/refined-assets.cjs` and `tests/architecture-review.cjs`. Local evidence is in `output/refined-asset-*.txt`, `output/architecture-*.txt`, and `output/playwright/architecture-assets.png` / `refined-village.png`.

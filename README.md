@@ -92,7 +92,7 @@ Replay keeps your seed and village layout; **FRESH LAYOUT** starts a new run. Hi
 | `server.mjs` | Local Node.js web server |
 | `tests/` | Simulation checks and browser verification snippets |
 
-The soldiers and scenery were authored through Blender MCP. The editable workshop and asset checkpoints are included, including the preserved cottage. Runtime models share geometry and materials; scenery uses instancing and cached static shadows.
+The soldiers and scenery were authored through Blender MCP. The current pack includes 19 asset families: refined soldier equipment, fractured masonry, damaged crates, compressed sandbags, and rubble, plus plastered ruins, broken windows, chimney remnants, burned timber frames, collapsed roof debris, barrels, charred trees, oaks, broken fences, and grass clumps. The editable workshop and asset checkpoints are included, including the preserved cottage and the pre-refinement workshop. `assets/refine-assets.py` contains the Blender authoring functions; `assets/export-character-pack.py` exports the tagged workshop with animation pivots, normals, materials, and baked wear colors. Runtime models share geometry and materials; scenery uses instancing and cached static shadows.
 
 This project adapts the existing Thunderbolt_WWII survival game. The original local reference is preserved separately and is not needed to run this repository. Combat values and adaptation differences are recorded in [BALANCE.md](BALANCE.md).
 

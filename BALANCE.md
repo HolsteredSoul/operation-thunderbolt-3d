@@ -76,4 +76,4 @@ After user review, aiming feedback was reduced to one small nearby controller ch
 
 ## Atmosphere
 
-Lighting, seeded surface weathering, mud/ruts, ground scorching, varied perimeter scenery, and drifting smoke change presentation only. They use separate visual RNG, add no collision or elevation, and do not consume combat random numbers. Existing Blender character geometry is preserved. Smoke is pooled and batched into one draw, with reduced density on Low quality.
+Lighting, seeded surface weathering, mud/ruts, ground scorching, varied perimeter scenery, and drifting smoke change presentation only. They use separate visual RNG, add no collision or elevation, and do not consume combat random numbers. The later Blender asset pass refines character meshes and scenery while retaining gameplay statistics, role identification, and weapon pivots. Ruined windows and chimney remnants rise above selected wall sections; these are visual additions to existing cover footprints, with no elevation or traversable window mechanics. Tree trunks and boundary fences stay outside the playable arena. Smoke is pooled and batched into one draw, with reduced density on Low quality.

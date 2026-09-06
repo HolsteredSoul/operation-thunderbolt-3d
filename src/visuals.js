@@ -4,17 +4,17 @@ const weatherTexture=makeWeatherTexture(),weatherMats=new Map(),whiteTint=new TH
 function weatherMaterial(base){if(!weatherMats.has(base.uuid)){const m=base.clone();m.map=weatherTexture;m.roughness=1;weatherMats.set(base.uuid,m);}return weatherMats.get(base.uuid);}
 const box=new THREE.BoxGeometry(1,1,1),sphere=new THREE.SphereGeometry(1,10,6),cylinder=new THREE.CylinderGeometry(1,1,1,10),rock=new THREE.DodecahedronGeometry(1,0);
 const mats=new Map();
-function material(color){if(!mats.has(color))mats.set(color,new THREE.MeshStandardMaterial({color,roughness:.9}));return mats.get(color);}
+function material(color,vertexColors=false){const key=color+(vertexColors?':wear':'');if(!mats.has(key))mats.set(key,new THREE.MeshStandardMaterial({color,roughness:.9,vertexColors}));return mats.get(key);}
 // Local Blender-authored meshes, shared and instanced at runtime.
 const pack=await fetch('./assets/village-pack.json').then(r=>{if(!r.ok)throw Error('Blender asset pack failed to load');return r.json();});
 const blenderAssets={};
-for(const [name,parts]of Object.entries(pack.assets))blenderAssets[name]=parts.map(p=>{const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p.positions,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(p.normals,3));const uv=[];for(let i=0;i<p.positions.length;i+=3){const n=p.normals.slice(i,i+3).map(Math.abs),axis=n.indexOf(Math.max(...n));uv.push(p.positions[i+(axis===0?2:0)]/48,p.positions[i+(axis===1?2:1)]/48);}geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));return{...p,positions:undefined,normals:undefined,geometry};});
-function blenderModel(name){
+for(const [name,parts]of Object.entries(pack.assets))blenderAssets[name]=parts.map(p=>{const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p.positions,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(p.normals,3));const uv=[];for(let i=0;i<p.positions.length;i+=3){const n=p.normals.slice(i,i+3).map(Math.abs),axis=n.indexOf(Math.max(...n));uv.push(p.positions[i+(axis===0?2:0)]/48,p.positions[i+(axis===1?2:1)]/48);}geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));if(p.colors)geometry.setAttribute('color',new THREE.Float32BufferAttribute(p.colors,3));return{...p,positions:undefined,normals:undefined,colors:undefined,geometry};});
+export function blenderModel(name){
  const root=new THREE.Group(),joints=new Map(),palette={uniform:'#a18e60',helmet:'#58623e',skin:'#c4a17a',boots:'#343833',webbing:'#98916a',wood:'#8b6d48',metal:'#303b39',band:'#ae4434',cloak:'#465e35',accent:'#dfd5a6',ammo:'#69704a',sand:'#b5a580',stone:'#a3a18d',brick:'#ad8268'};
  if(name==='rifleman'){palette.uniform='#557486';palette.helmet='#354b58';palette.webbing='#6b7779';}if(name==='officer'){palette.uniform='#303337';palette.helmet='#25272b';palette.webbing='#70533d';palette.accent='#c9a45e';}if(name==='sniper'){palette.uniform='#71804c';palette.helmet='#465635';palette.accent='#dc9e65';}
  if(name==='nest'){palette.uniform='#555e59';palette.helmet='#36463c';palette.metal='#303d3b';}
  const body=new THREE.Group();root.add(body);joints.set('body',body);
- for(const p of blenderAssets[name]){let joint=joints.get(p.joint);if(!joint){joint=new THREE.Group();joint.position.fromArray(p.pivot);body.add(joint);joints.set(p.joint,joint);}const mesh=new THREE.Mesh(p.geometry,material(pack.materials?.[p.material]??palette[p.material]));joint.add(mesh);}
+ for(const p of blenderAssets[name]){let joint=joints.get(p.joint);if(!joint){joint=new THREE.Group();joint.position.fromArray(p.pivot);body.add(joint);joints.set(p.joint,joint);}const mesh=new THREE.Mesh(p.geometry,material(pack.materials?.[p.material]??palette[p.material],!!p.geometry.getAttribute('color')));mesh.userData.assetMaterial=p.material;joint.add(mesh);}
  root.userData={body,legs:[joints.get('legL'),joints.get('legR')].filter(Boolean),gun:joints.get('gun')||new THREE.Group(),blender:true};root.updateMatrixWorld(true);root.userData.aimBounds=new THREE.Box3().setFromObject(root).expandByScalar(6);return root;
 }
 function part(parent,geo,color,x,y,z,sx,sy,sz,rz=0){const m=new THREE.Mesh(geo,material(color));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.z=rz;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
@@ -69,7 +69,8 @@ export function poseSoldier(model,e,time,dead=false){
 }
 export function buildVillage(G,scene){
   const root=new THREE.Group(),rng=seeded(G.seed+':visual-layout'),rand=(a,b)=>a+rng()*(b-a);
-  cube(root,'#60634d',1200,-14,900,2400,28,1800);
+  cube(root,'#494d3e',1200,-20,900,2660,12,2060);cube(root,'#60634d',1200,-14,900,2400,28,1800);
+  G.visualAssetCounts={};const count=name=>G.visualAssetCounts[name]=(G.visualAssetCounts[name]||0)+1;
   // Roads and curbs are flush, traversable surfaces.
   cube(root,'#83765c',1200,.25,900,2400,.5,112);cube(root,'#83765c',1200,.3,900,112,.6,1800);
   cube(root,'#938164',1200,.8,900,215,1,215);
@@ -82,10 +83,16 @@ export function buildVillage(G,scene){
     const x=o.x+o.w/2,z=o.y+o.h/2;
     const tint=new THREE.Color().setHSL(rand(.075,.12),rand(.06,.2),rand(.46,.78));
     if(blenderAssets[o.kind]){
-      const mesh=blenderModel(o.kind);mesh.position.set(x,0,z);
-      if(o.kind==='wall'){const horizontal=o.w>o.h;mesh.rotation.y=horizontal?0:Math.PI/2;mesh.scale.set((horizontal?o.w:o.h)/98,1,1);if(o.mat==='stone')mesh.traverse(m=>{if(m.isMesh)m.material=material('#a7a593');});}
+      let asset=o.kind;
+      if(o.kind==='wall'&&Math.max(o.w,o.h)>=70){const variants=['wall','wall','wall','wall_plaster','wall_plaster','wall_window','wall_timbers','wall_chimney'];asset=variants[Math.floor(rng()*variants.length)];}
+      if(o.kind==='crate'&&rng()<.3)asset='supply_barrel';if(o.kind==='rubble'&&rng()<.4)asset='collapsed_roof';
+      if(!blenderAssets[asset])asset=o.kind;count(asset);const mesh=blenderModel(asset);mesh.position.set(x,0,z);
+      if(o.kind==='wall'){const horizontal=o.w>o.h;mesh.rotation.y=horizontal?0:Math.PI/2;mesh.scale.set((horizontal?o.w:o.h)/98,1,1);if(o.mat==='stone')mesh.traverse(m=>{if(m.isMesh&&['brick','stone'].includes(m.userData.assetMaterial))m.material=material('#a7a593',!!m.geometry.getAttribute('color')); });}
       else if(o.kind==='sandbag'){const horizontal=o.w>o.h;mesh.rotation.y=horizontal?0:Math.PI/2;mesh.scale.set((horizontal?o.w:o.h)/82,1,1);}
       else mesh.scale.set(o.w/(o.kind==='crate'?37:38),1,o.h/(o.kind==='crate'?37:38));
+      // Half-turns vary the authored damage while retaining each cover footprint.
+      if(o.kind==='wall'||o.kind==='sandbag'){if(rng()<.5)mesh.rotation.y+=Math.PI;}
+      if(o.kind==='crate'){const turn=Math.floor(rng()*4);mesh.rotation.y=turn*Math.PI/2;if(turn%2){const x=mesh.scale.x;mesh.scale.x=mesh.scale.z;mesh.scale.z=x;}}
       mesh.traverse(m=>{if(m.isMesh){m.material=weatherMaterial(m.material);m.userData.tint=tint;}});
       root.add(mesh);continue;
     }
@@ -119,9 +126,14 @@ export function buildVillage(G,scene){
     const col=['#736e52','#4c5845','#968467','#484a3c'][i%4];
     part(root,rock,col,x,.9,z,rand(2,6),.8,rand(2,6));
   }
-  for(let i=0;i<170;i++){
-    const side=i%4;const x=side<2?rand(-40,2440):(side===2?-55:2455),z=side<2?(side===0?-55:1855):rand(-40,1840);
-    const h=rand(25,80);cube(root,'#383c2e',x,h*.3,z,rand(14,26),h*.6,rand(13,27));const tree=part(root,rock,['#3e4b36','#50583c','#5b5940'][i%3],x,h*.75,z,rand(18,42),h*.55,rand(18,42));tree.rotation.y=rand(0,6.28);
+  for(let i=0;i<145;i++){
+    const side=i%4,x=side<2?rand(-40,2440):(side===2?rand(-100,-60):rand(2460,2500)),z=side<2?(side===0?rand(-100,-60):rand(1860,1900)):rand(-40,1840);
+    const asset=i%3===0?'dead_tree':'tree_oak',tree=blenderModel(asset);tree.position.set(x,-1,z);tree.rotation.y=rand(0,Math.PI*2);tree.scale.setScalar(rand(.65,1.18));tree.traverse(m=>{if(m.isMesh){m.userData.tint=new THREE.Color().setHSL(.1,.08,rand(.65,.95));}});root.add(tree);count(asset);
+    if(i%3===0){const fence=blenderModel('broken_fence');fence.position.set(side<2?x:(side===2?-25:2425),0,side<2?(side===0?-25:1825):z);fence.rotation.y=side<2?0:Math.PI/2;root.add(fence);count('broken_fence');}
+  }
+  for(let i=0;i<220;i++){
+    const x=rand(30,2370),z=rand(30,1770);if(Math.abs(x-1200)<75||Math.abs(z-900)<75)continue;
+    const grass=blenderModel('grass_clump');grass.position.set(x,1,z);grass.rotation.y=rand(0,Math.PI*2);grass.scale.setScalar(rand(.6,1.2));root.add(grass);count('grass_clump');
   }
   // Village sign on the protected square, painted flat like a field marker.
   const canvas=document.createElement('canvas');canvas.width=256;canvas.height=128;const c=canvas.getContext('2d');c.fillStyle='#c6b994';c.fillRect(0,0,256,128);c.fillStyle='#656d51';c.textAlign='center';c.font='bold 21px Georgia';c.fillText('SAINTE-MARIE',128,55);c.font='12px Arial';c.fillText('SECTEUR 07',128,82);
