@@ -10,3 +10,5 @@ body{user-select:none}input{user-select:text}
 .controller-settings{margin:14px 0;font:10px Consolas;color:#bcbca1}.controller-settings div{display:flex;gap:8px;margin:7px 0}.controller-settings button{font-size:10px;padding:7px 9px}button:focus-visible{outline:3px solid #ffe39c;outline-offset:3px}.keyboard-hint{max-width:205px;line-height:1.7}.briefing{max-height:94vh;overflow-y:auto}
 
 #pad-status{display:block;font-size:12px;line-height:1.5;color:#f3e4bf;margin-bottom:5px}
+
+.play-settings{margin:15px 0}.play-settings button{border-color:#d8bb7880;color:#ffe2a0;width:100%;text-align:left}.play-settings small{display:block;color:#c0c3b7;font-size:11px;line-height:1.5;margin:7px 0}.controller-settings div{flex-wrap:wrap}.controller-settings button{flex:1;white-space:nowrap}.briefing{max-height:calc(100vh - 118px)}.grain{box-shadow:inset 0 0 190px #12141088;background:repeating-linear-gradient(0deg,#c9ba9903 0px,#00000003 1px,transparent 2px,transparent 4px)}#overlay{z-index:1}footer,#wave-panel,#score-panel,#banner,#toast{z-index:2}.modal{z-index:2}.controller-settings small{line-height:1.5}

@@ -1,0 +1,25 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+import {traceAim} from '../src/aim-guide.js';
+import {Controls,turnTowards} from '../src/input.js';
+const storage=new Map(),noop=()=>{},context={console,Event:class{},window:{dispatchEvent:noop},localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},crypto:globalThis.crypto};
+vm.createContext(context);for(const f of ['layout','ammo-placement','core','player','enemies','supplies'])vm.runInContext(fs.readFileSync(`src/${f}.js`,'utf8'),context);
+const run=s=>vm.runInContext(s,context);
+run(`G.audio={play(){},unlock(){}};G.fx={impact(){},blood(){},corpse(){},burst(){},explode(){},muzzle(){}};OT.ui.init(G);OT.audiofx={reset(){}};startRun('QA-03');`);
+run('damagePlayer(20)');assert.equal(run('G.player.hp'),80);assert.equal(run('G.player.invulnT'),.55);
+run(`G.difficulty='recruit';startRun('QA-03');damagePlayer(20)`);assert.equal(run('G.player.hp'),88);assert.equal(run('G.player.invulnT'),.8);
+run(`G.player.invulnT=0;G.difficulty='standard';damagePlayer(20)`);assert.equal(run('G.player.hp'),76,'next-run choice cannot change active rules');
+run(`G.score=321;G.player.invulnT=0;damagePlayer(10000)`);assert.equal(storage.get('ot3d_hiscore_recruit_v1'),'321');assert.equal(storage.has('ot3d_hiscore_v1'),false);
+run(`startRun('QA-03');G.score=123;damagePlayer(10000)`);assert.equal(storage.get('ot3d_hiscore_v1'),'123');
+run(`G.difficulty='recruit';startRun('QA-03')`);assert.equal(run('G.hiscore'),321);
+function firedSpread(mode){return run(`G.difficulty='${mode}';startRun('QA-03');G.obstacles=[];U.rand=(a,b)=>b;G.keys={KeyD:true};G.mouse.down=true;G.mouse.wx=2000;G.mouse.wy=900;OT.player.update(G,1/120);Math.atan2(G.bullets[0].vy,G.bullets[0].vx)-G.player.angle;`);}
+assert.ok(Math.abs(firedSpread('standard')-.18)<1e-9);assert.ok(Math.abs(firedSpread('recruit')-.072)<1e-9);
+const intersect=run('segmentRect'),p={x:100,y:100};
+assert.equal(traceAim(p,0,[],intersect).distance,547);
+let guide=traceAim(p,0,[{x:200,y:90,w:20,h:20}],intersect);assert.ok(guide.blocked);assert.equal(guide.x,197);assert.equal(guide.y,100);
+guide=traceAim(p,Math.PI/2,[{x:200,y:90,w:20,h:20}],intersect);assert.equal(guide.blocked,false);
+const end30=Array.from({length:30}).reduce(a=>turnTowards(a,Math.PI/2,1/30),0),end120=Array.from({length:120}).reduce(a=>turnTowards(a,Math.PI/2,1/120),0);assert.ok(Math.abs(end30-end120)<.01,'turning stays consistent across frame rates');
+const g={player:p,state:'playing',keys:{},mouse:{}},c=new Controls(g,{unlock:noop,pause:noop,reload:noop,menu:noop,back:noop,confirm:noop,disconnect:noop});
+const pad={index:0,mapping:'standard',connected:true,axes:[.575,0,0,0],buttons:Array.from({length:17},()=>({pressed:false,value:0}))};c.poll(1/60,[pad]);assert.ok(c.move.x<.4&&c.move.x>.3);c.gentle=false;c.poll(1/60,[pad]);assert.ok(Math.abs(c.move.x-.5)<1e-8);
+console.log('PASS Recruit damage/protection/spread, run isolation, separate records, cover/range guide, frame-rate independent turning, Gentle/Direct precision');

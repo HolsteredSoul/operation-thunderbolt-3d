@@ -45,6 +45,19 @@ Open [http://127.0.0.1:8083](http://127.0.0.1:8083). If you downloaded a ZIP, op
 
 No `npm install`, build command, or Blender installation is needed. The game uses bundled assets and runs offline once Node.js and the repository are available. The server listens on your computer's loopback address only.
 
+## Choose your settings
+
+Start with **DIFFICULTY: RECRUIT** for 40% less incoming damage, longer protection after a hit, and steadier shooting. Select **STANDARD** for the original challenge. Difficulty changes while paused take effect on your next deployment; records are separate for each difficulty.
+
+Controller settings are available before deployment and while paused:
+
+- **STICK FEEL: GENTLE** softens small stick movements and turns smoothly. **DIRECT** restores immediate facing.
+- **AIM ASSIST: 5°** is the new default; cycle to **OFF** or **3°** for less help.
+- **DIRECTION MARKER** toggles the small chevron near your soldier. Mouse users have a compact crosshair. No aiming line or text labels are displayed.
+- **SHAKE: REDUCED** is the default; adjust it if desired.
+
+These settings are saved in your browser. Aim assistance remains limited to enemies near your facing direction, within range and clear sight.
+
 ## First minute of play
 
 - **WASD / arrows:** move. **Mouse:** aim. **Hold left mouse button:** shoot.
@@ -63,7 +76,7 @@ No `npm install`, build command, or Blender installation is needed. The game use
 
 During play, use **left stick to move and face**, **RT to fire**, **X to reload**, and **Menu to pause**. You can play with just the left stick: slight aim assistance helps against visible enemies near your facing direction. The right stick is available for optional manual aiming.
 
-Menu navigation highlights buttons rather than moving the mouse pointer. Adjust **STICK DEAD ZONE** if the stick drifts; **AIM RESPONSE** adjusts optional right-stick aiming. If the controller disconnects, release RT, reconnect, and resume deliberately.
+Menu navigation highlights buttons rather than moving the mouse pointer. Adjust **STICK DEAD ZONE** if the stick drifts; **AIM RESPONSE** adjusts how optional right-stick aim settles. If the controller disconnects, release RT, reconnect, and resume deliberately.
 
 ## Troubleshooting
 

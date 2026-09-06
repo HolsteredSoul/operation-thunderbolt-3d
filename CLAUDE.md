@@ -2,18 +2,18 @@
 
 ## Current state
 
-The playable survival game, Blender asset passes, ammo recovery, and single-stick Xbox controls are implemented. Physical Xbox Bluetooth operation is user-confirmed in Chrome; in-app preview support and extended controller feel remain separately unverified. The current artwork is approved, including the compact kneeling sniper correction.
+The survival game now includes the user-requested atmosphere and accessibility pass: weathered scenery and smoke, gentler controller handling, Recruit/Standard difficulty, and selectable Off/3°/5° assistance. The user rejected excessive aiming overlays: retain just one small controller direction chevron or compact mouse crosshair, with no dashed line or aim text. Existing Blender character models are preserved.
 
-The personal repository is https://github.com/HolsteredSoul/operation-thunderbolt-3d. It remains private; GitHub Pages publication has not been enabled. Windows users can double-click `gamestart.cmd`. Obsolete plans and duplicate status/memory notes have been removed, with lasting decisions consolidated here and technical evidence retained in the documents below.
+Physical Xbox Bluetooth operation was user-confirmed in Chrome before this pass; current subjective stick feel and in-app preview support require separate human assessment. Windows users can double-click `gamestart.cmd`. The personal repository is https://github.com/HolsteredSoul/operation-thunderbolt-3d; publishing configuration should be checked on GitHub when relevant.
 
 ## Working rules
 
 1. Work within the user's requested scope. Do not start unsolicited visual, balance, progression, or game-mode passes. Keep this a survival game unless the user requests otherwise.
 2. Current code is authoritative. Preserve the separate original project at `C:/DEV/Thunderbolt_WWII`; it is not a runtime dependency.
-3. Read [BALANCE.md](BALANCE.md) before gameplay changes. The user finds the game challenging: preserve enemy pressure when refining ammo recovery, and explain balance changes with observed evidence.
+3. Read [BALANCE.md](BALANCE.md) before gameplay changes. The user finds the game challenging: keep Standard combat values and ammo recovery intact, offer Recruit as the easier profile, and explain balance changes with evidence.
 4. Use Blender MCP for Blender work. Preserve the cottage and asset checkpoints, save small steps, use Solid viewport, and avoid GPU rendering because of the earlier driver crash.
 5. Preserve distinct soldier silhouettes, persistent role names/symbols, and the player's YOU marker unless the user requests changes.
-6. Controller preference: left-stick movement/facing, optional right-stick override, and only slight assistance (12-degree cone, 25% correction, 3-degree cap, no accumulating lock). Keep mouse aiming unassisted. Do not restore mandatory twin-stick aiming or full automatic targeting without a user request.
+6. Controller preference: left-stick movement/facing, optional right-stick override, and selectable assistance (12-degree cone; default 50% correction capped at 5°, optional 25%/3° or Off; no accumulating lock). Gentle stick feel is the default. Keep mouse aiming unassisted. Do not restore mandatory twin-stick aiming or full automatic targeting without a user request.
 7. Verify changed behavior and separate controlled tests, ordinary browser playthroughs, and human hardware testing. Simulated gamepads do not prove physical input. Preserve power-on/click/press-A guidance; pairing alone is not live connectivity.
 8. Keep runtime assets and rendering dependencies local. No additional runtime services are required.
 9. Keep documentation current and concise. Use Git history for completed work rather than session journals; update this current-state summary when needed. Do not add workflow-enforcement hooks unless the user asks after repeated convention failures.
@@ -23,7 +23,8 @@ The personal repository is https://github.com/HolsteredSoul/operation-thunderbol
 - Double-click `gamestart.cmd`, or run `npm start`: http://127.0.0.1:8083. Node.js 20+; no install or build step.
 - `npm test`: simulation and 20 fixed seeds; takes several minutes.
 - `node tests/gameplay-refinements.mjs`: ammo recovery and controller input checks.
-- `node tests/controller-assist.mjs`: facing and slight assistance checks.
+- `node tests/controller-assist.mjs`: facing and assistance checks.
+- `node tests/accessibility.mjs`: difficulty, score isolation, direction-marker cover tracing, and Gentle/Direct controls.
 - `tests/*.cjs`: Playwright CLI browser function snippets, not Playwright Test specifications.
 - Raw browser artifacts and measurements are gitignored under `output/`; recorded evidence and limitations are in [VERIFICATION.md](VERIFICATION.md).
 

@@ -33,11 +33,11 @@ async(page)=>{
   await page.evaluate(()=>qaPads=[]);await page.waitForFunction(()=>__OT3D.G.state==='paused');await page.evaluate(()=>qaPads=[qaPad]);await page.waitForTimeout(150);
   checks.push({name:'disconnect pauses; reconnect does not resume',pass:await page.evaluate(()=>__OT3D.G.state==='paused')});
   await button(13,true);await button(13,false);checks.push({name:'D-pad menu navigation',pass:await page.evaluate(()=>document.activeElement.id==='fresh')});
-  await page.evaluate(()=>qaPad.axes=[0,.8,0,0]);await page.waitForTimeout(120);checks.push({name:'left-stick menu navigation',pass:await page.evaluate(()=>document.activeElement.id==='pad-deadzone')});await page.evaluate(()=>qaPad.axes=[0,0,0,0]);
+  await page.evaluate(()=>qaPad.axes=[0,.8,0,0]);await page.waitForTimeout(120);checks.push({name:'left-stick menu navigation',pass:await page.evaluate(()=>document.activeElement.id==='pad-feel')});await page.evaluate(()=>qaPad.axes=[0,0,0,0]);
   await button(1,true);await button(1,false);checks.push({name:'B resumes pause',pass:await page.evaluate(()=>__OT3D.G.state==='playing')});
   await page.mouse.move(1100,460);await page.waitForTimeout(100);checks.push({name:'mouse resumes control',pass:await page.evaluate(()=>__OT3D.G.input.source==='mouse')});
   await page.evaluate(()=>qaPad.axes=[.03,.04,.05,.02]);await page.waitForTimeout(100);checks.push({name:'stick drift does not steal mouse',pass:await page.evaluate(()=>__OT3D.G.input.source==='mouse')});
   await page.keyboard.press('p');await page.screenshot({path:'output/playwright/controller-menu.png'});
   await page.reload();await page.waitForFunction(()=>window.__OT3D);
-  return {hardware,checks};
+  if(checks.some(c=>!c.pass))throw Error(JSON.stringify(checks));return {hardware,checks};
 }

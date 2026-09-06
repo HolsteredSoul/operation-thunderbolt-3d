@@ -4,6 +4,11 @@ const randomAPI=()=>({random:seeded('initial'),rand(a,b){return a+this.random()*
 const U=randomAPI(),V=randomAPI(),OT={};
 const G={state:'menu',stateT:0,keys:{},mouse:{x:0,y:0,wx:1300,wy:900,down:false},MAP:{w:2400,h:1800},camera:{x:1200,y:900},shake:0,reduceShake:false,muted:false,lowQuality:false,player:null,enemies:[],bullets:[],pickups:[],obstacles:[],decor:[],spawnPoints:[],playerSpawn:{x:1200,y:900},wave:0,score:0,kills:0,time:0,enemiesLeft:0,nextWaveIn:0,hiscore:0,seed:'THUNDER-1944',fx:null,audio:null,ui:null,stats:{shots:0,hits:0},effects:[],corpses:[]};
 try{G.hiscore=Math.max(0,Number(localStorage.getItem('ot3d_hiscore_v1'))||0);}catch{}
+// Difficulty is fixed for a run; changing the menu choice applies on deployment.
+const DIFFICULTIES={standard:{damage:1,invulnerability:.55,spread:1,movingSpread:3},recruit:{damage:.6,invulnerability:.8,spread:.75,movingSpread:1.6}};
+G.difficulty='standard';G.runDifficulty='standard';
+function difficultyRules(){return DIFFICULTIES[G.runDifficulty]||DIFFICULTIES.standard;}
+function highScoreKey(){return G.runDifficulty==='recruit'?'ot3d_hiscore_recruit_v1':'ot3d_hiscore_v1';}
 function circleRectHit(cx,cy,r,o){const x=U.clamp(cx,o.x,o.x+o.w),y=U.clamp(cy,o.y,o.y+o.h);return(cx-x)**2+(cy-y)**2<r*r;}
 function moveCircle(e,dx,dy){
   const n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/6));
@@ -51,9 +56,10 @@ function updateBullets(dt){
 }
 function damagePlayer(d){
   const p=G.player;if(!p||p.hp<=0||p.invulnT>0)return;
+  d*=difficultyRules().damage;
   if(p.ammo+p.reserve<=16&&G.pickups.some(pk=>pk.emergency))G.stats.resupplyDamage=(G.stats.resupplyDamage||0)+Math.min(p.hp,d);
-  p.hp=Math.max(0,p.hp-d);p.invulnT=.55;addShake(6);G.ui.flash('red');G.audio.play('playerHurt');
-  if(!p.hp){G.fx.corpse(p);setState('gameover');G.audio.play('die');G.newRecord=G.score>G.hiscore;G.hiscore=Math.max(G.hiscore,G.score);try{localStorage.setItem('ot3d_hiscore_v1',String(G.hiscore));}catch{}}
+  p.hp=Math.max(0,p.hp-d);p.invulnT=difficultyRules().invulnerability;addShake(6);G.ui.flash('red');G.audio.play('playerHurt');
+  if(!p.hp){G.fx.corpse(p);setState('gameover');G.audio.play('die');G.newRecord=G.score>G.hiscore;G.hiscore=Math.max(G.hiscore,G.score);try{localStorage.setItem(highScoreKey(),String(G.hiscore));}catch{}}
 }
 function setState(state){G.state=state;G.stateT=0;G.mouse.down=false;G.keys={};window.dispatchEvent(new Event('game-state'));}
 function freshSeed(){const n=new Uint32Array(1);crypto.getRandomValues(n);return 'TB-'+n[0].toString(36).toUpperCase();}
@@ -63,6 +69,9 @@ function setupLayout(seed){
   U.random=seeded(G.seed+':combat');V.random=seeded(G.seed+':effects');
 }
 function startRun(seed=G.seed){
+  G.runDifficulty=G.difficulty==='recruit'?'recruit':'standard';
+  try{G.hiscore=Math.max(0,Number(localStorage.getItem(highScoreKey()))||0);}catch{G.hiscore=0;}
+
   setupLayout(seed);Object.assign(G,{score:0,kills:0,wave:0,time:0,shake:0,newRecord:false,stats:{shots:0,hits:0},enemies:[],bullets:[],pickups:[],effects:[],corpses:[]});
   OT.player.reset(G);OT.enemies.reset(G);OT.ui.reset(G);OT.audiofx.reset(G);G.camera.x=1200;G.camera.y=900;
   if(G.rebuild)G.rebuild();setState('playing');G.audio.unlock();

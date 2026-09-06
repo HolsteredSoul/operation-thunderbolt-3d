@@ -36,7 +36,7 @@ const pad={index:0,connected:true,mapping:'standard',axes:[0,0,0,0],buttons:Arra
 const tick=()=>input.poll(1/60,[pad]),button=(i,value)=>pad.buttons[i]={value:Number(value),pressed:value};
 tick();pad.axes=[.05,-.04,.08,.03];tick();assert.equal(input.source,'mouse');
 pad.axes=[1,1,0,0];tick();assert.equal(input.source,'pad');assert.ok(Math.abs(Math.hypot(input.sample().moveX,input.sample().moveY)-1)<1e-8);
-pad.axes=[.575,0,0,0];tick();assert.ok(Math.abs(input.sample().moveX-.5)<1e-8);
+pad.axes=[.575,0,0,0];tick();assert.ok(Math.abs(input.sample().moveX-Math.pow(.5,1.6))<1e-8);
 button(7,true);tick();assert.equal(input.sample().fire,true);button(2,true);tick();tick();assert.equal(events.filter(e=>e==='reload').length,1);
 button(9,true);tick();assert.equal(g.state,'paused');assert.equal(input.sample().fire,false);tick();assert.equal(events.filter(e=>e==='pause').length,1);
 button(9,false);tick();button(9,true);tick();assert.equal(g.state,'playing');assert.equal(input.sample().fire,false);

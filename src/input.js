@@ -8,9 +8,14 @@ export function chooseAutoAimTarget(player,enemies,current,canAim,heading){
   if(enemies.includes(current)&&valid(current))return current;
   let target=null,best=Infinity;for(const e of enemies){if(!valid(e))continue;const d=Math.hypot(e.x-player.x,e.y-player.y);if(d<best){target=e;best=d;}}return target;
 }
+export function turnTowards(current,target,dt,response=8){
+  const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));
+  const change=delta*(1-Math.exp(-response*dt)),limit=3.5*dt;
+  return current+Math.max(-limit,Math.min(limit,change));
+}
 // Both devices produce the same movement/fire actions consumed by the player.
 export class Controls{
-  constructor(g,handlers){this.g=g;this.handlers=handlers;this.source='mouse';this.pad=null;this.buttons=[];this.axes=[];this.move={x:0,y:0};this.direction={x:1,y:0};this.fire=false;this.fireBlocked=true;this.suspended=false;this.dead=.15;this.response=14;this.status='Power on controller, click this game, then press A';this.menuAxis=0;this.menuRepeat=0;this.manualAim=false;this.autoTarget=null;this.heading=0;}
+  constructor(g,handlers){this.g=g;this.handlers=handlers;this.source='mouse';this.pad=null;this.buttons=[];this.axes=[];this.move={x:0,y:0};this.direction={x:1,y:0};this.fire=false;this.fireBlocked=true;this.suspended=false;this.dead=.15;this.response=8;this.gentle=true;this.assistDegrees=5;this.status='Power on controller, click this game, then press A';this.menuAxis=0;this.menuRepeat=0;this.manualAim=false;this.autoTarget=null;this.heading=0;}
   useMouse(){this.source='mouse';this.fire=false;this.autoTarget=null;}
   reset(){this.move={x:0,y:0};this.fire=false;this.fireBlocked=true;this.autoTarget=null;this.manualAim=false;this.heading=this.g.player?.angle??0;}
   poll(dt,pads){
@@ -28,10 +33,11 @@ export class Controls{
     if(switched)this.fireBlocked=true;
     if(!b[7])this.fireBlocked=false;
     if(this.source==='pad'&&!this.suspended){
-      this.move=move;this.manualAim=Math.hypot(aim.x,aim.y)>0;
-      if(Math.hypot(aim.x,aim.y)>0){const angle=Math.atan2(aim.y,aim.x),old=Math.atan2(this.direction.y,this.direction.x),delta=Math.atan2(Math.sin(angle-old),Math.cos(angle-old)),next=old+delta*(1-Math.exp(-this.response*dt));this.direction={x:Math.cos(next),y:Math.sin(next)};}
+      const magnitude=Math.hypot(move.x,move.y),curve=this.gentle&&this.g.state==='playing'?Math.pow(magnitude,.6):1;
+      this.move={x:move.x*curve,y:move.y*curve};this.manualAim=Math.hypot(aim.x,aim.y)>0;
+      if(Math.hypot(aim.x,aim.y)>0){const angle=Math.atan2(aim.y,aim.x),old=Math.atan2(this.direction.y,this.direction.x),delta=Math.atan2(Math.sin(angle-old),Math.cos(angle-old)),next=this.gentle?turnTowards(old,angle,dt,this.response):old+delta*(1-Math.exp(-this.response*dt));this.direction={x:Math.cos(next),y:Math.sin(next)};}
       if(this.manualAim)this.heading=Math.atan2(this.direction.y/Math.sin(35*Math.PI/180)-this.direction.x,this.direction.x+this.direction.y/Math.sin(35*Math.PI/180));
-      else if(Math.hypot(move.x,move.y)>0)this.heading=Math.atan2(move.y-move.x,move.x+move.y);
+      else if(magnitude>.12){const desired=Math.atan2(move.y-move.x,move.x+move.y);this.heading=this.gentle?turnTowards(this.heading,desired,dt,this.response):desired;}
       if(edge(9))this.handlers.pause();
       else if(this.g.state!=='playing'){
         this.menuRepeat-=dt;const axis=Math.abs(move.y)>=Math.abs(move.x)?move.y:move.x,nav=Math.abs(axis)>.45?Math.sign(axis):0;
@@ -52,7 +58,7 @@ export class Controls{
       if(!this.manualAim&&this.autoTarget&&!this.autoTarget.dead&&this.autoTarget.hp>0){
         const desired=Math.atan2(this.autoTarget.y-this.g.player.y,this.autoTarget.x-this.g.player.x),delta=Math.atan2(Math.sin(desired-this.heading),Math.cos(desired-this.heading));
         // Fixed nominal heading prevents this gentle nudge accumulating into a lock-on.
-        aimAngle+=Math.max(-Math.PI/60,Math.min(Math.PI/60,delta*.25));
+        aimAngle+=Math.max(-this.assistDegrees*Math.PI/180,Math.min(this.assistDegrees*Math.PI/180,delta*(this.assistDegrees===5?.5:.25)));
       }
       return{moveX:this.move.x,moveY:this.move.y,fire:this.fire,aimAngle};
     }

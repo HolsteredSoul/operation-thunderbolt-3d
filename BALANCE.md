@@ -1,8 +1,8 @@
 # Retained combat and deliberate adaptation differences
 
-Reference: the current `template.html` and `modules/*.js` in `C:\DEV\Thunderbolt_WWII`, inspected and briefly played before implementation. Distances retain the original units; the arena remains 2400 × 1800. Damage, health, speed, starting ammunition, score, random drop rates, upgrades, composition and pacing retain their original values. The user approved the ammunition recovery changes below on 6 September 2026.
+Reference: the current `template.html` and `modules/*.js` in `C:\DEV\Thunderbolt_WWII`, inspected and briefly played before implementation. Distances retain the original units; the arena remains 2400 × 1800. The Standard difficulty retains original combat values. Recruit is an optional, deliberately more forgiving profile described below; enemy composition and pacing, starting ammunition, drops, and upgrades are shared. The user approved the ammunition recovery changes below on 6 September 2026.
 
-## Player
+## Player — Standard
 
 100 HP; radius 14; speed 230 units/s; magazine 8; reserve 72 (cap 160); damage 34; firing interval 0.16 s; reload 1.15 s; damage invulnerability 0.55 s. Projectiles travel at 750 units/s for 0.7 s: 525 units beyond the 22-unit muzzle offset. Spread is ±0.06 radians stationary, ±0.18 moving.
 
@@ -51,6 +51,29 @@ At an illustrative 50% hit rate, a 24-round recovery buys about 12 hits, compare
 The checks establish validity and preserve numerical combat balance. They do **not** establish equal difficulty between seeds or parity of difficulty with the 2D original.
 
 
-## Requested controller assistance
+## Difficulty profiles
 
-After physical Bluetooth operation was confirmed in Chrome, the user requested simpler single-stick controls and very slight assistance. Left stick sets movement and nominal facing; releasing it retains facing. Right stick is an optional manual override. Only visible, living enemies within 547 units, with clear line of sight and within 12 degrees of nominal facing, qualify. A valid current target is retained to avoid flicker. Assistance applies 25% of the angular difference, capped at 3 degrees, measured against the fixed nominal heading so repeated updates cannot accumulate into full lock-on. The reticle shows the actual assisted firing direction. Right-stick override and keyboard/mouse receive no automatic correction. Weapon spread, damage, range, collision and enemy pressure remain unchanged.
+| Rule | Standard | Recruit |
+| --- | --- | --- |
+| Incoming damage multiplier | 1 | 0.6 (40% less) |
+| Protection after a hit | 0.55 s | 0.8 s |
+| Stationary shot spread | ±0.06 radians | ±0.045 radians |
+| Moving shot spread | ±0.18 radians | ±0.072 radians |
+
+Recruit defaults on when no difficulty preference is saved. The choice is captured at deployment; changing it while paused affects only the next run. Both modes keep the same HP, enemy waves, enemy stats, movement speed, weapon damage, ammunition, and recovery supply rules. Damage reduction applies when the player is hit, including resupply-damage telemetry.
+
+Records are isolated: Standard uses `ot3d_hiscore_v1`, Recruit uses `ot3d_hiscore_recruit_v1`. This pass responds to the user's request for an easier first experience; it does not establish a measured human win rate.
+
+## Controller assistance and feel
+
+Left stick sets movement and nominal facing; releasing it retains facing. Right stick is an optional manual override. Only visible, living enemies within 547 units, clear sight, and 12° of nominal facing qualify. A valid current target is retained.
+
+The user requested a 5° cap. The default 5° option corrects 50% of angular error, capped at 5°. The 3° option retains 25% correction and a 3° cap; Off applies no correction. Each uses a separate nominal heading so updates cannot accumulate into full lock-on. Manual right-stick and keyboard/mouse aiming receive no assistance.
+
+Gentle stick feel raises normalized movement magnitude to the power 1.6, keeping full-stick top speed unchanged. Turning uses frame-time-aware smoothing and a 3.5-radian/s maximum. Direct restores linear stick travel and immediate movement-facing changes. Dead zone and optional right-stick response remain adjustable. Reduced shake defaults on.
+
+After user review, aiming feedback was reduced to one small nearby controller chevron or a compact mouse crosshair. The chevron follows actual assisted firing direction and turns amber for cover within 90 units. The mouse crosshair turns amber for a blocked selected target. No dashed guide, fixed-distance controller cursor, target ring, or aim text remains.
+
+## Atmosphere
+
+Lighting, seeded surface weathering, mud/ruts, ground scorching, varied perimeter scenery, and drifting smoke change presentation only. They use separate visual RNG, add no collision or elevation, and do not consume combat random numbers. Existing Blender character geometry is preserved. Smoke is pooled and batched into one draw, with reduced density on Low quality.

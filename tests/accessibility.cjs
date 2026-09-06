@@ -1,0 +1,34 @@
+async(page)=>{
+  await page.goto('http://127.0.0.1:8083/?v=atmosphere6');await page.waitForFunction(()=>window.__OT3D);await page.setViewportSize({width:1280,height:720});
+  const saved=await page.evaluate(()=>({controller:localStorage.getItem('ot3d_controller'),difficulty:localStorage.getItem('ot3d_difficulty')})),checks=[];
+  const record=(name,pass,data)=>{checks.push({name,pass,data});if(!pass)throw Error(JSON.stringify(checks));};
+  await page.evaluate(()=>{Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[]});__OT3D.G.input.useMouse();window.dispatchEvent(new Event('focus'));});
+  const recruit=page.getByRole('button',{name:'DIFFICULTY: RECRUIT',exact:true});
+  if(await recruit.count()===0)await page.getByRole('button',{name:'DIFFICULTY: STANDARD',exact:true}).click();
+  await page.getByRole('button',{name:'STICK FEEL:',exact:false}).click();await page.getByRole('button',{name:'STICK FEEL:',exact:false}).click();
+  await page.getByRole('button',{name:'AIM ASSIST:',exact:false}).click();await page.reload();await page.waitForFunction(()=>window.__OT3D);
+  record('assistance setting survives reload',await page.evaluate(()=>__OT3D.G.input.assistDegrees===0));
+  await page.evaluate(()=>{Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[]});window.dispatchEvent(new Event('focus'));});
+  await page.getByRole('button',{name:'AIM ASSIST:',exact:false}).click();await page.getByRole('button',{name:'AIM ASSIST:',exact:false}).click();
+  await page.getByRole('button',{name:'DEPLOY',exact:false}).click();
+  record('Recruit deployment',await page.evaluate(()=>__OT3D.G.runDifficulty==='recruit'));
+  await page.evaluate(()=>{__OT3D.G.nextWaveIn=999;__OT3D.damagePlayer(20);});
+  record('Recruit applies 40% damage reduction',await page.evaluate(()=>__OT3D.G.player.hp===88));
+  await page.keyboard.press('p');await page.getByRole('button',{name:'NEXT RUN: RECRUIT',exact:true}).click();
+  record('pause explains next-run difficulty',await page.getByText('Applies when you start a new run.',{exact:false}).isVisible());
+  await page.getByRole('button',{name:'RESUME',exact:false}).click();record('difficulty cannot alter active run',await page.evaluate(()=>__OT3D.G.runDifficulty==='recruit'));
+  const aim=await page.evaluate(()=>{const a=__OT3D,g=a.G;g.enemies=[];g.obstacles=[];g.input.source='pad';g.input.heading=0;g.input.manualAim=false;g.input.move={x:0,y:0};g.input.assistDegrees=5;g.input.suspended=false;g.player.invulnT=999;
+    a.render();const range=g.aimGuide.distance;g.obstacles=[{x:g.player.x+160,y:g.player.y-25,w:20,h:50}];a.render();const cover=g.aimGuide;
+    g.obstacles=[];const e=a.OT.enemies.makeEnemy(g,'rifleman',g.player.x+200,g.player.y+200*Math.tan(10*Math.PI/180));e.speed=0;e.cooldown=999;g.enemies=[e];a.render();const correction=g.input.sample().aimAngle*180/Math.PI;return{range,cover,correction};});
+  record('direction marker cover trace follows actual shot range',aim.range===547&&aim.cover.blocked&&Math.abs(aim.cover.distance-157)<.01,aim);
+  record('5-degree assist cap in live app',Math.abs(aim.correction-5)<.01);
+  const stable=await page.evaluate(()=>{const a=__OT3D,counts=[];for(let i=0;i<4;i++){a.startRun('QA-03');a.G.nextWaveIn=999;a.render();counts.push({geometries:a.renderer.info.memory.geometries,textures:a.renderer.info.memory.textures});}return counts;});
+  record('restart does not accumulate textures or geometries',stable.every(v=>v.geometries===stable[0].geometries&&v.textures===stable[0].textures),stable);
+  await page.evaluate(()=>{const a=__OT3D,g=a.G;g.difficulty='recruit';a.startRun('THUNDER-1944');g.nextWaveIn=999;g.player.invulnT=999;g.input.source='pad';g.input.heading=-.7;g.input.manualAim=false;g.input.suspended=false;g.input.move={x:0,y:0};g.input.assistDegrees=5;g.time=8;
+    for(const [i,type]of ['rifleman','officer','sniper','nest'].entries()){const spot=a.nearestClear(g,1350+i*45,770+i*80);const e=a.OT.enemies.makeEnemy(g,type,spot.x,spot.y);e.speed=0;e.cooldown=999;g.enemies.push(e);}a.render();});
+  await page.waitForTimeout(300);await page.screenshot({path:'output/playwright/atmosphere-gameplay.png'});
+  await page.keyboard.press('p');await page.getByRole('button',{name:'DIRECTION MARKER:',exact:false}).click();record('direction marker toggle',await page.evaluate(()=>!__OT3D.G.showAimGuide));await page.getByRole('button',{name:'DIRECTION MARKER:',exact:false}).click();
+  await page.screenshot({path:'output/playwright/atmosphere-settings-720p.png'});
+  await page.evaluate(saved=>{for(const [key,value]of [['ot3d_controller',saved.controller],['ot3d_difficulty',saved.difficulty]]){if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}},saved);
+  await page.reload();await page.waitForFunction(()=>window.__OT3D);return checks;
+}

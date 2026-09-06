@@ -22,11 +22,12 @@ Already have the project? Double-click the launcher, or open a terminal in its f
 
 ## Features
 
-- Seeded villages with solid cover, cutaway walls, and rubble, with endless survival waves.
+- Seeded villages with weathered masonry, muddy wheel tracks, scorched ground, drifting smoke, and endless survival waves.
 - Four visually distinct enemy roles: riflemen, officers, snipers, and machine-gun nests.
 - Health supplies, ammunition, and four capped upgrades that reset each run.
 - Persistent emergency ammo supplies when ammunition runs low, with a visible direction marker.
-- Keyboard/mouse and Xbox controller input, including single-stick movement/facing and slight aim assistance.
+- Keyboard/mouse and Xbox controller input, with gentle stick handling and selectable Off / 3° / 5° assistance.
+- Recruit difficulty for first-time play, alongside the original Standard challenge and separate high scores.
 - Pause, replay the same seed, generate a fresh layout, and a browser-local high score.
 - Local mesh assets, vendored rendering dependencies, and procedural sound; play offline after downloading the project and installing Node.js.
 
@@ -61,13 +62,17 @@ Power on and connect the controller, open the game in Chrome, click inside the p
 | A | Confirm selection |
 | B | Resume from pause |
 
-The right stick is optional. Slight assistance nudges shots toward visible enemies already close to your facing direction. It corrects 25% of the angle, capped at 3 degrees, within a 12-degree cone, and does not build into a target lock. Manual right-stick aim overrides it. Stick dead zone and aim response can be adjusted in the menu.
+The right stick is optional. Slight assistance nudges shots toward visible enemies already close to your facing direction. The default 5° setting corrects half of the angular error, capped at 5°, within a 12° cone. The 3° setting retains the earlier 25% correction; assistance can also be switched off. It does not accumulate into target lock, and manual right-stick aim overrides it. **Gentle** stick feel softens small movements and smooths turning; **Direct** restores immediate left-stick facing. The menu also saves dead zone, aim response, a small direction marker, and reduced shake.
 
 Controller navigation highlights menu buttons; it does not move the operating-system pointer. Losing focus or disconnecting the active controller pauses the game. Reconnect, release the trigger, and deliberately resume. Physical Xbox Bluetooth input has been confirmed in Chrome; controller support in the Codex in-app preview has not been separately verified.
 
+## Difficulty
+
+New settings default to **Recruit**: 40% less incoming damage, 0.8 seconds of protection after a hit, and tighter shot spread. **Standard** keeps the original combat values. Choose difficulty before deploying; a choice made while paused applies to the next run. Each difficulty has its own browser-local high score. Enemy waves and the ammo recovery system are the same in both modes.
+
 ## Surviving the village
 
-Use walls, crates, sandbags, and raised rubble to block incoming fire. Ground litter and floorboards are traversable. The aiming reticle warns when a target is covered or out of range. Watch sniper warning lines and the bearings for distant enemies.
+Use walls, crates, sandbags, and raised rubble to block incoming fire. Ground litter and floorboards are traversable. Controller aiming uses one small chevron near the soldier; mouse aiming uses a compact crosshair with a dark outline. Amber indicates nearby cover for the chevron or a blocked selected mouse target. There are no dashed aim lines or range labels. Watch sniper warning lines and the bearings for distant enemies.
 
 You begin with 8 rounds loaded and 72 in reserve. At 16 total rounds or fewer, follow **AMMO +24** to an emergency supply. It replenishes reserves, so reload to use it. Emergency supplies persist until collected, and further supplies can appear after later depletion. Ordinary ammo drops grant 16 rounds and remain for 30 seconds. Enemy strength and wave pressure were retained during the ammo changes.
 
@@ -97,6 +102,7 @@ This project adapts the existing Thunderbolt_WWII survival game. The original lo
 npm test
 node tests/gameplay-refinements.mjs
 node tests/controller-assist.mjs
+node tests/accessibility.mjs
 ```
 
 `npm test` runs independent simulation checks across 20 fixed seeds and takes several minutes. Results are written under the ignored `output/` directory. The focused checks cover ammo recovery, controller mappings, and slight aim assistance.

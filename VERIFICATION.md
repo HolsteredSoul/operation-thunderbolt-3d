@@ -129,3 +129,36 @@ Primary references used during implementation:
 - [MDN Gamepad guide](https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API) for polling and connection handling.
 - [Microsoft XInputGetState](https://learn.microsoft.com/en-us/windows/win32/api/xinput/nf-xinput-xinputgetstate) for native connection results.
 - [Microsoft Bluetooth device state](https://learn.microsoft.com/en-us/windows/win32/api/bluetoothapis/ns-bluetoothapis-bluetooth_device_info_struct) and [enumeration limits](https://learn.microsoft.com/en-us/windows/win32/api/bluetoothapis/nf-bluetoothapis-bluetoothfindfirstdevice).
+
+
+## Atmosphere and accessibility — final review, 6 September 2026
+
+The final presentation adds directional overcast lighting, seeded grime on scenery, muddy wheel ruts, scorched ground, varied perimeter vegetation, and pooled smoke. Existing Blender character models, navigation, and collision footprints are preserved. Smoke was reduced to one batched draw after the initial stress test showed excessive rendering overhead. Static menu/pause scenes redraw less frequently while input polling remains active.
+
+The user rejected the initial arrow/text/reticle/dashed-line combination. Final controller feedback is one small chevron close to the soldier, following the actual assisted direction. Mouse input has a compact outlined crosshair. The aim line, range labels, and target ring were removed. The marker can be disabled independently in settings.
+
+Recruit and Standard are selectable before deployment. Recruit takes 40% less incoming damage, has 0.8-second hit protection, and reduced stationary/moving spread; Standard retains its prior values. Difficulty is captured per run and high scores use separate keys. Gentle/Direct stick feel, Off/3°/5° assistance, marker visibility, and shake settings persist in browser storage. The 5° option corrects 50% of angular error inside the existing 12° cone, capped at 5°, without accumulating lock-on.
+
+Checks completed on the final pass:
+
+- `npm test`: all 11 groups, including 20 seeds and unchanged Standard combat values.
+- `node tests/gameplay-refinements.mjs`: zero-ammo recovery on 20 seeds × 4 positions, repeat recovery, independent lifetimes, reload, caps, and controller handling.
+- `node tests/controller-assist.mjs`: progressive/retained facing, target eligibility, correction strength, 5° cap, optional 3°/Off, and no accumulating lock.
+- `node tests/accessibility.mjs`: difficulty damage/protection/spread, next-run isolation, separate high scores, cover tracing, frame-rate consistency, and Gentle/Direct precision.
+- Nine browser accessibility checks, including saved settings, measured 5° correction, cover trace, 720p settings, and four restarts with stable geometry/texture counts.
+- Fifteen existing mouse/keyboard, targeting, state, pickup, and storage checks passed at their explicit Standard baseline.
+- Fourteen controller/ammo browser checks passed. The menu-navigation assertion was updated to the newly added first settings button; no navigation implementation change was needed.
+- Final browser console: zero errors and zero warnings. Final 720p gameplay and settings screenshots were visually reviewed.
+
+Two ordinary agent-driven keyboard/mouse Recruit playthroughs used normal shooting, movement, and supply collection, with no health/ammo cheats or modified enemies:
+
+| Seed | Time | Wave | Kills | HP | Loaded / reserve | Emergency collections | Completely empty |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| QA-03 | 31.3 s | 1 | 3 | 47.2 | 7 / 32 | 2 | 0 s |
+| QA-11 | 31.1 s | 2 | 8 | 85.6 | 1 / 16 | 0 | 0 s |
+
+These short runs show ongoing survival pressure and working recovery, not a measured human difficulty curve. The revised physical-controller feel has not been independently confirmed by a human; earlier Chrome hardware connectivity remains a separate result.
+
+At the 34-enemy cap in headed Chrome 152 / Intel Iris Xe / 1920×1080 / DPR 1, the final batched-smoke pass measured **55.8 FPS High** (30.0 ms p95) and **57.5 FPS Low** (29.9 ms p95), with about 84–85 draw calls. The initial atmosphere pass measured 44.4 FPS High with 108 draws. Other game previews were open; this is not a controlled cross-version benchmark or a locked-60 guarantee. This pass does not meet a 60 FPS mean at the measured full-cap workload.
+
+Local raw evidence: `output/accessibility-browser-final.txt`, `output/atmosphere-browser-checks.txt`, `output/atmosphere-controller-checks.txt`, `output/atmosphere-console.txt`, `output/recruit-playthrough.txt`, `output/atmosphere-performance-final.txt`, and `output/playwright/atmosphere-*.png`. Raw output stays gitignored.

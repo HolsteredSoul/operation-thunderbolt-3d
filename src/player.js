@@ -11,7 +11,6 @@ OT.player = (() => {
   const BULLET_DMG = 34;
   const BULLET_LIFE = 0.7;    // ~525px effective range (was 1.6/1200px — G2)
   const SPREAD_BASE = 0.06;   // was 0.02 (G3: vestigial)
-  const MOVE_SPREAD_MULT = 3; // moving triples spread (G3: accuracy vs mobility)
   const EMPTY_THROTTLE = 0.35;
   // D1 upgrade caps (applied by ui on pickup collection)
   const MAX_DMG_BONUS = 24;      // p.dmg 34 → 58
@@ -128,8 +127,8 @@ OT.player = (() => {
             p.fireCd = p.fireCdBase;
             p.ammo--;
             // G3: spread widens while moving — forces the move-vs-aim tradeoff
-            const moveMult = p.moving ? MOVE_SPREAD_MULT : 1;
-            const spread = U.rand(-SPREAD_BASE, SPREAD_BASE) * moveMult;
+            const rules=difficultyRules(),moveMult=p.moving?rules.movingSpread:1;
+            const spread = U.rand(-SPREAD_BASE, SPREAD_BASE) * moveMult * rules.spread;
             const ang = p.angle + spread;
             const mx = p.x + Math.cos(p.angle) * MUZZLE_OFFSET;
             const my = p.y + Math.sin(p.angle) * MUZZLE_OFFSET;
