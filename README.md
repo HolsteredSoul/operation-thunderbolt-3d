@@ -6,6 +6,10 @@ Built with plain JavaScript, Three.js, Blender-authored models, and procedural a
 
 ## Start playing
 
+**[Play in your browser on GitHub Pages](https://holsteredsoul.github.io/operation-thunderbolt-3d/)** — no download or installation needed. Click **DEPLOY**, or press Enter to begin.
+
+### Run locally
+
 Requires **Node.js 20 or newer** and a desktop browser with **WebGL 2**. Chrome is recommended for the Xbox controller setup verified on this project.
 
 ```sh
@@ -14,7 +18,7 @@ cd operation-thunderbolt-3d
 npm start
 ```
 
-Open **[http://127.0.0.1:8083](http://127.0.0.1:8083)** and click **DEPLOY**, or press Enter. Keep the terminal open while playing; Ctrl+C stops the server. This private repository requires GitHub access to clone.
+Open **[http://127.0.0.1:8083](http://127.0.0.1:8083)** and click **DEPLOY**, or press Enter. Keep the terminal open while playing; Ctrl+C stops the server.
 
 On Windows, you can also double-click **`gamestart.cmd`** in the downloaded project folder to start the server and open the browser. It reuses an already running game. Keep the server window open while playing.
 
