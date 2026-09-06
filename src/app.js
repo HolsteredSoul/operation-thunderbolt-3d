@@ -1,4 +1,4 @@
-import {setupFullscreen} from './fullscreen.js';
+import {setupFullscreen} from './fullscreen.js?v=ios-launch2';
 import {TouchControls} from './touch.js';
 import {Controls,chooseAutoAimTarget} from './input.js';
 import {Tracers} from './tracers.js';
@@ -166,7 +166,7 @@ function showState(){
   if(G.state==='menu'){$('modal-title').innerHTML='A village.<br>A rifle.<br><em>Hold the line.</em>';$('modal-kicker').textContent='FIELD ORDERS / 1944';$('start').innerHTML='DEPLOY <span>→</span>';}
   if(G.state==='paused'){$('modal-title').innerHTML='Catch your<br><em>breath.</em>';$('modal-kicker').textContent='BATTLE PAUSED';$('modal-copy').textContent='The battlefield is on hold. Resume when you’re ready. Fresh layout starts a new run.';$('start').innerHTML='RESUME <span>→</span>';}
   if(G.state==='gameover'){$('modal-title').innerHTML='Your watch<br><em>has ended.</em>';$('modal-kicker').textContent=G.newRecord?'NEW FIELD RECORD':'AFTER-ACTION REPORT';$('modal-copy').textContent='The village remembers. Replay this battlefield, or deploy to a fresh layout.';$('results').textContent=`SCORE ${G.score.toLocaleString()} · WAVE ${G.wave} · ${G.kills} KILLS\n${Math.floor(G.time/60)}m ${Math.floor(G.time%60)}s survived · ${G.stats.shots?Math.round(G.stats.hits/G.stats.shots*100):0}% hits`;$('results').style.whiteSpace='pre-line';$('start').innerHTML='REPLAY SEED <span>→</span>';}
-  if(G.input.touch?.enabled){$('modal-title').innerHTML=$('modal-title').innerHTML.replaceAll('<br>',' ');if(G.state==='menu')$('modal-copy').textContent='Left thumb moves. Hold FIRE to aim and shoot at a nearby visible enemy. Tap RELOAD to top up. Start on Recruit and turn sideways.';}
+  if(G.input.touch?.enabled){if(G.state==='menu')$('start').innerHTML='PLAY <span>→</span>';$('modal-title').innerHTML=$('modal-title').innerHTML.replaceAll('<br>',' ');if(G.state==='menu')$('modal-copy').textContent='Left thumb moves. Hold FIRE to aim and shoot at a nearby visible enemy. Tap RELOAD to top up. Start on Recruit and turn sideways.';}
   $('seed').value=G.seed;updateHUD();if(G.input?.source==='pad'&&G.state!=='playing')$('start').focus();
 }
 function toast(s){$('toast').style.display='block';$('toast').textContent=s;toastT=2;}
@@ -199,7 +199,7 @@ G.input=new Controls(G,{
   confirm:()=>{const buttons=menuButtons();(buttons.includes(document.activeElement)?document.activeElement:$('start')).click();}
 });
 G.input.touch=new TouchControls(G,{unlock:()=>G.audio?.unlock(),reload:()=>OT.player.startReload(G,G.player),pause,visible:e=>{const s=project(e.x,e.y,29);return s.x>20&&s.x<width-20&&s.y>55&&s.y<height-45&&!(s.y>height-160&&(s.x<180||s.x>width-200))&&lineOfSight(G.player.x,G.player.y,e.x,e.y);}});
-setupFullscreen({pause,isPlaying:()=>G.state==='playing'});
+setupFullscreen({pause,isPlaying:()=>G.state==='playing',isPaused:()=>G.state==='paused',play:()=>{G.input.suspended=false;G.audio.unlock();$('start').click();},isTouch:()=>G.input.touch.enabled});
 G.showAimGuide=true;G.reduceShake=true;G.difficulty='recruit';
 try{const saved=JSON.parse(localStorage.getItem('ot3d_controller')||'{}');if([.1,.15,.2,.25].includes(saved.dead))G.input.dead=saved.dead;if([8,14,24].includes(saved.response))G.input.response=saved.response;if(typeof saved.gentle==='boolean')G.input.gentle=saved.gentle;if([0,3,5].includes(saved.assist))G.input.assistDegrees=saved.assist;if(typeof saved.guide==='boolean')G.showAimGuide=saved.guide;if(typeof saved.shake==='boolean')G.reduceShake=saved.shake;const mode=localStorage.getItem('ot3d_difficulty');if(['recruit','standard'].includes(mode))G.difficulty=mode;}catch{}
 G.runDifficulty=G.difficulty;try{G.hiscore=Math.max(0,Number(localStorage.getItem(highScoreKey()))||0);}catch{}

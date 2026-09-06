@@ -3,8 +3,8 @@
 ## Play on your phone
 
 1. Open the [GitHub Pages game](https://holsteredsoul.github.io/operation-thunderbolt-3d/).
-2. Turn your phone sideways. In Chrome, tap **FULL SCREEN**. On iPhone, open the site in Safari, use **Share → Add to Home Screen**, keep **Open as Web App** enabled if shown, and launch the new icon. This removes browser bars; system indicators may remain. The in-game home-screen help repeats these steps.
-3. Choose **Recruit**, then tap **DEPLOY**. Drag the left pad to move; hold **FIRE** with your right thumb to track and shoot a nearby visible enemy. You can dodge while firing. Cover still blocks shots. With no clear target, you keep your ammunition.
+2. Turn your phone sideways and tap **PLAY** at the bottom. You can play directly in Safari without installing anything. If stuck upright, open Control Center and turn off **Portrait Orientation Lock** (padlock with circular arrow). The portrait screen has a help button too. In Chrome, tap **FULL SCREEN**. On iPhone, open the site in Safari, use **Share → Add to Home Screen**, keep **Open as Web App** enabled if shown, and launch the new icon. This removes browser bars; system indicators may remain. The **iPHONE SETUP** button shows numbered steps: Safari’s **… → Share** (or its square-with-up-arrow Share button), scroll to **Add to Home Screen**, then **Add**, and launch the new **Thunderbolt** icon. **PLAY IN SAFARI** at the bottom starts without installing.
+3. Choose **Recruit**, then tap **PLAY**. Drag the left pad to move; hold **FIRE** with your right thumb to track and shoot a nearby visible enemy. You can dodge while firing. Cover still blocks shots. With no clear target, you keep your ammunition.
 4. Tap **RELOAD** to top up, or keep holding FIRE with a target to reload an empty magazine. Follow the AMMO marker when reserves run out.
 5. Tap **Ⅱ** to pause. Rotating upright also pauses; turn sideways and tap **RESUME** to continue.
 
