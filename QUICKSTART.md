@@ -1,6 +1,14 @@
 # Quickstart
 
-## Start your existing Windows copy
+## One-click Windows launch
+
+Double-click **`gamestart.cmd`** in the game folder (`C:\DEV\Thunderbolt_3d` for your existing copy). It starts the server and opens the game in your default browser when ready. Click **DEPLOY** to play.
+
+Keep the server window open while playing; close it or press Ctrl+C to stop. Clicking the launcher again reuses the running game. Node.js 20 or newer is still required. For Xbox input, use Chrome if your default browser does not detect the controller.
+
+You can create a desktop shortcut to `gamestart.cmd` for convenient access. Keep the actual file in the project folder with `package.json`.
+
+## Start your existing Windows copy from a terminal
 
 1. Open PowerShell or Windows Terminal.
 2. Run:

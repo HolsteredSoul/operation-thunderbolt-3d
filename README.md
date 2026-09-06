@@ -16,7 +16,9 @@ npm start
 
 Open **[http://127.0.0.1:8083](http://127.0.0.1:8083)** and click **DEPLOY**, or press Enter. Keep the terminal open while playing; Ctrl+C stops the server. This private repository requires GitHub access to clone.
 
-Already have the project? Open a terminal in its folder and run `npm start`. See the **[Quickstart guide](QUICKSTART.md)** for the existing Windows checkout, controller setup, alternate ports, and troubleshooting.
+On Windows, you can also double-click **`gamestart.cmd`** in the downloaded project folder to start the server and open the browser. It reuses an already running game. Keep the server window open while playing.
+
+Already have the project? Double-click the launcher, or open a terminal in its folder and run `npm start`. See the **[Quickstart guide](QUICKSTART.md)** for the existing Windows checkout, controller setup, alternate ports, and troubleshooting.
 
 ## Features
 
