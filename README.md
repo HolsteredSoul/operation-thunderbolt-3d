@@ -37,6 +37,14 @@ Already have the project? Double-click the launcher, or open a terminal in its f
 
 ## Controls
 
+### Mobile / touch
+
+Open the [live game](https://holsteredsoul.github.io/operation-thunderbolt-3d/) on your phone and turn it **landscape**. A separate touch layout appears automatically: **left thumb pad** moves, **hold FIRE** tracks and shoots a nearby visible enemy, and **RELOAD** tops up the magazine. No second aiming stick is needed. With no clear target, FIRE saves your ammo. Tap **Ⅱ** to pause; rotating upright pauses too, and returning to landscape requires Resume.
+
+Tap **FULL SCREEN** in Chrome. On **iPhone**, use Safari → Share → **Add to Home Screen**, leave **Open as Web App** on if offered, then launch the new icon. This removes browser bars; iOS system indicators may remain. The game includes these instructions under **HOME SCREEN / iPHONE FULL SCREEN**. Online launch requires an internet connection.
+
+Mobile starts on **Low quality**. Recruit is recommended for first-time play. Touch aiming is separate from the Xbox 5° setting; desktop and controller controls retain their existing behavior.
+
 ### Keyboard and mouse
 
 | Input | Action |
@@ -107,6 +115,7 @@ npm test
 node tests/gameplay-refinements.mjs
 node tests/controller-assist.mjs
 node tests/accessibility.mjs
+node tests/mobile-controls.mjs
 ```
 
 `npm test` runs independent simulation checks across 20 fixed seeds and takes several minutes. Results are written under the ignored `output/` directory. The focused checks cover ammo recovery, controller mappings, and slight aim assistance.

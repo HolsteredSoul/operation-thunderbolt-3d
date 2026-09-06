@@ -1,5 +1,15 @@
 # Quickstart
 
+## Play on your phone
+
+1. Open the [GitHub Pages game](https://holsteredsoul.github.io/operation-thunderbolt-3d/).
+2. Turn your phone sideways. In Chrome, tap **FULL SCREEN**. On iPhone, open the site in Safari, use **Share → Add to Home Screen**, keep **Open as Web App** enabled if shown, and launch the new icon. This removes browser bars; system indicators may remain. The in-game home-screen help repeats these steps.
+3. Choose **Recruit**, then tap **DEPLOY**. Drag the left pad to move; hold **FIRE** with your right thumb to track and shoot a nearby visible enemy. You can dodge while firing. Cover still blocks shots. With no clear target, you keep your ammunition.
+4. Tap **RELOAD** to top up, or keep holding FIRE with a target to reload an empty magazine. Follow the AMMO marker when reserves run out.
+5. Tap **Ⅱ** to pause. Rotating upright also pauses; turn sideways and tap **RESUME** to continue.
+
+Touch controls appear automatically on devices with coarse touch input, in their own layout. Low quality starts automatically on these devices. The home-screen game still needs an internet connection to load; it does not cache itself for offline use. Use the public link on a phone: `127.0.0.1` on your phone refers to the phone itself, not your Windows PC.
+
 ## One-click Windows launch
 
 Double-click **`gamestart.cmd`** in the game folder (`C:\DEV\Thunderbolt_3d` for your existing copy). It starts the server and opens the game in your default browser when ready. Click **DEPLOY** to play.
@@ -25,7 +35,7 @@ Keep the terminal open while playing. Press **Ctrl+C** in that terminal to stop 
 
 ## Set up on another computer
 
-You need Node.js 20 or newer, a desktop browser with WebGL 2, and access to the private GitHub repository. Install Git to use the clone command, or download the repository ZIP while signed in and extract it.
+You need Node.js 20 or newer, a desktop browser with WebGL 2, and the GitHub repository. Install Git to use the clone command, or download the repository ZIP and extract it.
 
 Check Node.js:
 

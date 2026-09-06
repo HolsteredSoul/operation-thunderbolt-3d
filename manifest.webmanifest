@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "Operation Thunderbolt \u2014 The Village",
+  "short_name": "Thunderbolt",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#15211f",
+  "theme_color": "#15211f",
+  "icons": [
+    {
+      "src": "assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

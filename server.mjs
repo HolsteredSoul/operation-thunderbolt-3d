@@ -12,6 +12,6 @@ http.createServer((req,res) => {
   if (!reference && (!file.startsWith(root + path.sep) || /(?:^|[\\/])\./.test(path.relative(root,file)))) {res.writeHead(403).end();return;}
   fs.readFile(file,(err,data)=>{
     if(err){res.writeHead(404).end('Not found');return;}
-    res.writeHead(200,{'Content-Type':({'html':'text/html','js':'text/javascript','mjs':'text/javascript','css':'text/css','json':'application/json','png':'image/png'})[file.split('.').pop()]||'application/octet-stream','Cache-Control':'no-cache'});res.end(data);
+    res.writeHead(200,{'Content-Type':({'html':'text/html','js':'text/javascript','mjs':'text/javascript','css':'text/css','json':'application/json','webmanifest':'application/manifest+json','png':'image/png'})[file.split('.').pop()]||'application/octet-stream','Cache-Control':'no-cache'});res.end(data);
   });
 }).listen(port,'127.0.0.1',()=>console.log(`Operation Thunderbolt: http://127.0.0.1:${port}`));

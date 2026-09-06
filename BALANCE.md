@@ -77,3 +77,9 @@ After user review, aiming feedback was reduced to one small nearby controller ch
 ## Atmosphere
 
 Lighting, seeded surface weathering, mud/ruts, ground scorching, varied perimeter scenery, and drifting smoke change presentation only. They use separate visual RNG, add no collision or elevation, and do not consume combat random numbers. The later Blender asset pass refines character meshes and scenery while retaining gameplay statistics, role identification, and weapon pivots. Ruined windows and chimney remnants rise above selected wall sections; these are visual additions to existing cover footprints, with no elevation or traversable window mechanics. Tree trunks and boundary fences stay outside the playable arena. Smoke is pooled and batched into one draw, with reduced density on Low quality.
+
+## Mobile touch adaptation
+
+Touch has its own one-pad movement and held FIRE action. It tracks the nearest visible living enemy within 500 units in any direction, retaining that target until invalid; the aiming turn is capped at 6 radians/s. Shooting requires alignment within 0.12 radians and a clear shot. Targets under the thumb control areas or outside the visible battlefield are excluded. With no eligible target, holding FIRE consumes no ammunition. Movement has a 12% radial dead zone and a mild 1.3-power response, preserving the same full-travel speed. Firing, reload duration, spread, enemies, difficulty profiles and drops retain their existing values.
+
+This intentionally supplies stronger tracking on touch to avoid a second aiming stick on phones. The Xbox 0/3/5° assistance and mouse aiming are unchanged. Scores remain local to the browser and separated by difficulty, not input device; this is not a claim of equal difficulty across input methods.

@@ -1,0 +1,62 @@
+async (page) => {
+ const browser=page.context().browser();
+ const context=await browser.newContext({viewport:{width:844,height:390},isMobile:true,hasTouch:true,deviceScaleFactor:1});
+ await context.addInitScript(()=>Object.defineProperty(navigator,'getGamepads',{value:()=>[]}));
+ const p=await context.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+ const checks=[];const check=(name,pass,data)=>{checks.push({name,pass,data});if(!pass)throw new Error(name+' '+JSON.stringify(data));};
+ try{
+ await p.goto('http://127.0.0.1:8083/?v=mobile2');await p.waitForFunction(()=>window.__OT3D);
+ check('touch detected, separate controls and low quality',await p.evaluate(()=>__OT3D.G.input.touch.enabled&&__OT3D.G.input.source==='touch'&&__OT3D.G.lowQuality&&getComputedStyle(document.querySelector('.controller-settings')).display==='none'),await p.evaluate(()=>({enabled:__OT3D.G.input.touch.enabled,source:__OT3D.G.input.source,quality:__OT3D.G.lowQuality,coarse:matchMedia('(any-pointer: coarse)').matches,points:navigator.maxTouchPoints}))); 
+ await p.screenshot({path:'output/playwright/mobile-menu.png'});
+ await p.locator('#start').tap();
+ await p.evaluate(()=>{const a=__OT3D;a.G.nextWaveIn=999;a.G.player.invulnT=999;});
+ const cdp=await context.newCDPSession(p);
+ const rect=async id=>p.locator(id).boundingBox();
+ let m=await rect('#touch-move'),f=await rect('#touch-fire');
+ const finger=(id,x,y)=>({id,x,y,radiusX:8,radiusY:8,force:1});
+ const left=finger(1,m.x+m.width/2+38,m.y+m.height/2),right=finger(2,f.x+f.width/2,f.y+f.height/2);
+ const start=await p.evaluate(()=>({x:__OT3D.G.player.x,y:__OT3D.G.player.y}));
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[left]});
+ await p.waitForTimeout(240);
+ check('real touch moves in screen direction',await p.evaluate(s=>Math.hypot(__OT3D.G.player.x-s.x,__OT3D.G.player.y-s.y)>10,start));
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[left,right]});
+ await p.waitForTimeout(100);
+ check('simultaneous move and held fire',await p.evaluate(()=>__OT3D.G.input.touch.held&&Math.hypot(__OT3D.G.input.sample().moveX,__OT3D.G.input.sample().moveY)>.3&&__OT3D.G.input.source==='touch'));
+ check('no target does not waste ammo',await p.evaluate(()=>__OT3D.G.stats.shots===0));
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await p.evaluate(()=>{const a=__OT3D,e=a.OT.enemies.makeEnemy(a.G,'rifleman',a.G.player.x+140,a.G.player.y);e.speed=0;e.fireCd=999;e.hp=10000;e.maxHp=10000;a.G.enemies=[e];a.G.obstacles=[];a.G.input.touch.angle=0;});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[right]});
+ await p.waitForTimeout(800);
+ check('assisted firing with actual touch',await p.evaluate(()=>__OT3D.G.stats.shots>=2&&__OT3D.G.input.touch.target===__OT3D.G.enemies[0]),await p.evaluate(()=>({shots:__OT3D.G.stats.shots,held:__OT3D.G.input.touch.held,target:!!__OT3D.G.input.touch.target,source:__OT3D.G.input.source,state:__OT3D.G.state,angle:__OT3D.G.input.touch.angle,suspended:__OT3D.G.input.suspended,actions:__OT3D.G.input.sample(),enemy:__OT3D.G.enemies[0],position:__OT3D.project(__OT3D.G.enemies[0].x,__OT3D.G.enemies[0].y,29)})));
+ const shotsBefore=await p.evaluate(()=>__OT3D.G.stats.shots);
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[right,left]});await p.waitForTimeout(450);
+ check('move and shoot together',await p.evaluate(n=>__OT3D.G.stats.shots>n&&__OT3D.G.player.moving,shotsBefore));
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});
+ check('cancel clears both actions',await p.evaluate(()=>!__OT3D.G.input.touch.held&&__OT3D.G.input.sample().moveX===0));
+ await p.locator('#touch-reload').tap();await p.waitForTimeout(1300);
+ check('reload tap',await p.evaluate(()=>__OT3D.G.player.ammo===8&&__OT3D.G.player.reserve<72));
+ await p.screenshot({path:'output/playwright/mobile-gameplay.png'});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[right]});
+ await p.setViewportSize({width:390,height:844});await p.waitForTimeout(250);
+ check('portrait pauses and clears touches',await p.evaluate(()=>__OT3D.G.state==='paused'&&!document.getElementById('rotate-prompt').hidden&&!__OT3D.G.input.touch.held));
+ await p.screenshot({path:'output/playwright/mobile-portrait.png'});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await p.setViewportSize({width:667,height:375});await p.waitForTimeout(150);
+ check('landscape requires deliberate resume',await p.evaluate(()=>__OT3D.G.state==='paused'&&document.getElementById('rotate-prompt').hidden));
+ await p.locator('#start').tap();
+ check('resume does not stick fire',await p.evaluate(()=>!__OT3D.G.input.touch.held));
+ await p.screenshot({path:'output/playwright/mobile-small.png'});
+ for(const id of ['#touch-move','#touch-fire','#touch-reload','#pause','#fullscreen']){const b=await rect(id);check('usable bounds '+id,b.width>=44&&b.height>=44&&b.x>=0&&b.y>=0&&b.x+b.width<=667&&b.y+b.height<=375,b);}
+ await p.locator('#pause').tap();check('tap pause',await p.evaluate(()=>__OT3D.G.state==='paused'));
+ await p.locator('#fullscreen').tap();await p.waitForTimeout(150);
+ check('Chrome native fullscreen from tap',await p.evaluate(()=>!!document.fullscreenElement));
+ await p.locator('#fullscreen').tap();await p.waitForTimeout(150);
+ check('exit fullscreen',await p.evaluate(()=>!document.fullscreenElement));
+ await p.evaluate(()=>{document.documentElement.requestFullscreen=undefined;document.documentElement.webkitRequestFullscreen=undefined;});
+ await p.locator('#fullscreen').tap();check('unsupported fullscreen shows iOS instructions',await p.locator('#fullscreen-help').evaluate(e=>e.open));
+ await p.locator('#fullscreen-help-close').tap();
+ const manifest=await p.evaluate(async()=>{const url=new URL(document.querySelector('link[rel=manifest]').href);return (await fetch(url)).json();});check('relative home-screen start and fullscreen manifest',manifest.start_url==='./'&&manifest.display==='fullscreen'&&manifest.orientation==='landscape');
+ check('no browser errors',errors.length===0,errors);
+ return checks;
+ } finally{await context.close();}
+}

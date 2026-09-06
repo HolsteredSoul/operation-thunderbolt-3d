@@ -1,3 +1,5 @@
+import {setupFullscreen} from './fullscreen.js';
+import {TouchControls} from './touch.js';
 import {Controls,chooseAutoAimTarget} from './input.js';
 import {Tracers} from './tracers.js';
 import {traceAim} from './aim-guide.js';
@@ -17,7 +19,7 @@ const ROLE_STYLE={rifleman:{label:'RIFLEMAN',height:53,width:13,color:'#a5cde9',
 const modelAimBox=new THREE.Box3(),raycaster=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),-29),aimPoint=new THREE.Vector3(),pointer=new THREE.Vector2();
 let destroyVillage=()=>{},width=0,height=0,last=0,accum=0,uiT=0,toastT=0,frames=[],cpuFrames=[],frameCount=0;
 const tracers=new Tracers(scene),atmosphere=new Atmosphere(scene);
-function resize(){width=innerWidth;height=innerHeight;renderer.setSize(width,height);overlay.width=width;overlay.height=height;const view=height<600?600:680;camera.left=-view*width/height/2;camera.right=-camera.left;camera.top=view/2;camera.bottom=-view/2;camera.updateProjectionMatrix();updateCamera(1);updateAim();}
+function resize(){width=innerWidth;height=innerHeight;renderer.setSize(width,height,false);overlay.width=width;overlay.height=height;const view=height<600?600:680;camera.left=-view*width/height/2;camera.right=-camera.left;camera.top=view/2;camera.bottom=-view/2;camera.updateProjectionMatrix();updateCamera(1);updateAim();}
 function updateCamera(dt){
   const menu=G.state==='menu',tx=G.player.x+(menu?-190:0),ty=G.player.y+(menu?190:0),k=1-Math.exp(-9.21*dt);
   G.camera.x+=(tx-G.camera.x)*k;G.camera.y+=(ty-G.camera.y)*k;
@@ -28,6 +30,9 @@ function updateCamera(dt){
 function project(x,y,h=29){const p=new THREE.Vector3(x,h,y).project(camera);return{x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
 function updateAim(){
   if(!width)return;
+  if(G.input?.source==='touch'){
+    const t=G.input.touch,p=G.player;G.aimTarget=t.target;G.mouse.wx=p.x+Math.cos(t.angle)*500;G.mouse.wy=p.y+Math.sin(t.angle)*500;return;
+  }
   if(G.input?.source==='pad'){
     const input=G.input,p=G.player;
     input.autoTarget=input.manualAim||input.assistDegrees===0?null:chooseAutoAimTarget(p,G.enemies,input.autoTarget,e=>{
@@ -92,7 +97,7 @@ function drawRoleBadges(items){
   }
 }
 function drawAimFeedback(p,pp){
-  const pad=G.input.source==='pad',angle=pad?(G.input.sample().aimAngle??p.angle):U.angTo(p.x,p.y,G.mouse.wx,G.mouse.wy);
+  const pad=G.input.source==='pad'||G.input.source==='touch',angle=pad?(G.input.sample().aimAngle??p.angle):U.angTo(p.x,p.y,G.mouse.wx,G.mouse.wy);
   const guide=traceAim(p,angle,G.obstacles,segmentRect);G.aimGuide=guide;
   ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
   if(pad&&G.showAimGuide){
@@ -147,7 +152,7 @@ function updateHUD(){
   const p=G.player,inter=G.nextWaveIn>0,comp=OT.enemies.previewNextWave(G);
   setText('seed-label','SEED / '+G.seed);setText('health-value',`${Math.ceil(p.hp)} / ${p.maxHp}`);$('health-fill').style.width=100*p.hp/p.maxHp+'%';$('health-fill').style.background=p.hp<30?'#d58b6a':'#adbf91';
   setText('health-state',p.hp<30?'CRITICAL · FIND MEDICAL SUPPLIES':p.hp<70?'WOUNDED':'FIT FOR DUTY');
-  setText('ammo',String(p.ammo).padStart(2,'0'));setText('reserve','/ '+p.reserve);setText('reload-label',p.reloadT>0?'RELOADING':p.ammo===0&&p.reserve===0?'FOLLOW AMMO MARKER':(G.input?.source==='pad'?'X - RELOAD':'R - RELOAD'));
+  setText('ammo',String(p.ammo).padStart(2,'0'));setText('reserve','/ '+p.reserve);setText('reload-label',p.reloadT>0?'RELOADING':p.ammo===0&&p.reserve===0?'FOLLOW AMMO MARKER':(G.input?.source==='touch'?'TAP RELOAD':G.input?.source==='pad'?'X - RELOAD':'R - RELOAD'));
   const rounds=Array.from({length:p.magSize},(_,i)=>`<i class="${i<p.ammo?'':'empty'}"></i>`).join('');if($('rounds').innerHTML!==rounds)$('rounds').innerHTML=rounds;
   setText('wave-status',inter?'REINFORCEMENTS IN '+Math.ceil(G.nextWaveIn)+'s':G.runDifficulty.toUpperCase()+' / HOLD YOUR GROUND');setText('wave-number',String(G.wave||1).padStart(2,'0'));
   $('wave-info').innerHTML=(inter?'NEXT WAVE':'WAVE')+'<br><b>'+ (inter?Object.values(comp).reduce((a,b)=>a+b,0):G.enemiesLeft)+' HOSTILES</b>';
@@ -161,6 +166,7 @@ function showState(){
   if(G.state==='menu'){$('modal-title').innerHTML='A village.<br>A rifle.<br><em>Hold the line.</em>';$('modal-kicker').textContent='FIELD ORDERS / 1944';$('start').innerHTML='DEPLOY <span>→</span>';}
   if(G.state==='paused'){$('modal-title').innerHTML='Catch your<br><em>breath.</em>';$('modal-kicker').textContent='BATTLE PAUSED';$('modal-copy').textContent='The battlefield is on hold. Resume when you’re ready. Fresh layout starts a new run.';$('start').innerHTML='RESUME <span>→</span>';}
   if(G.state==='gameover'){$('modal-title').innerHTML='Your watch<br><em>has ended.</em>';$('modal-kicker').textContent=G.newRecord?'NEW FIELD RECORD':'AFTER-ACTION REPORT';$('modal-copy').textContent='The village remembers. Replay this battlefield, or deploy to a fresh layout.';$('results').textContent=`SCORE ${G.score.toLocaleString()} · WAVE ${G.wave} · ${G.kills} KILLS\n${Math.floor(G.time/60)}m ${Math.floor(G.time%60)}s survived · ${G.stats.shots?Math.round(G.stats.hits/G.stats.shots*100):0}% hits`;$('results').style.whiteSpace='pre-line';$('start').innerHTML='REPLAY SEED <span>→</span>';}
+  if(G.input.touch?.enabled){$('modal-title').innerHTML=$('modal-title').innerHTML.replaceAll('<br>',' ');if(G.state==='menu')$('modal-copy').textContent='Left thumb moves. Hold FIRE to aim and shoot at a nearby visible enemy. Tap RELOAD to top up. Start on Recruit and turn sideways.';}
   $('seed').value=G.seed;updateHUD();if(G.input?.source==='pad'&&G.state!=='playing')$('start').focus();
 }
 function toast(s){$('toast').style.display='block';$('toast').textContent=s;toastT=2;}
@@ -183,7 +189,7 @@ function loseFocus(){if(G.state==='playing')setState('paused');G.keys={};G.mouse
 window.addEventListener('focus',()=>G.input.suspended=false);
 window.addEventListener('blur',loseFocus);document.addEventListener('visibilitychange',()=>{if(document.hidden)loseFocus();});window.addEventListener('game-state',()=>{G.input.reset();showState();});
 let lastMouseX=NaN,lastMouseY=NaN;
-window.addEventListener('mousemove',e=>{if(e.clientX!==lastMouseX||e.clientY!==lastMouseY){lastMouseX=e.clientX;lastMouseY=e.clientY;G.input.useMouse();G.mouse.x=e.clientX;G.mouse.y=e.clientY;updateAim();}});canvas.addEventListener('mousedown',e=>{if(e.button===0&&G.state==='playing'){G.input.useMouse();G.audio.unlock();G.mouse.down=true;}});window.addEventListener('mouseup',()=>G.mouse.down=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('resize',resize);
+window.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;if(e.clientX!==lastMouseX||e.clientY!==lastMouseY){lastMouseX=e.clientX;lastMouseY=e.clientY;G.input.useMouse();G.mouse.x=e.clientX;G.mouse.y=e.clientY;updateAim();}});canvas.addEventListener('mousedown',e=>{if(e.sourceCapabilities?.firesTouchEvents||G.input.touch?.enabled&&G.input.source==='touch')return;if(e.button===0&&G.state==='playing'){G.input.useMouse();G.audio.unlock();G.mouse.down=true;}});window.addEventListener('mouseup',()=>G.mouse.down=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('resize',resize);
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();loseFocus();$('fatal').hidden=false;$('fatal').textContent='The graphics context was lost. Reload the page to restore the battlefield.';});
 function menuButtons(){return [...document.querySelectorAll('#modal button,header button')].filter(b=>b.offsetParent!==null&&!b.disabled);}
 G.input=new Controls(G,{
@@ -192,6 +198,8 @@ G.input=new Controls(G,{
   menu:direction=>{const buttons=menuButtons(),i=buttons.indexOf(document.activeElement);buttons[(i+direction+buttons.length)%buttons.length]?.focus();},
   confirm:()=>{const buttons=menuButtons();(buttons.includes(document.activeElement)?document.activeElement:$('start')).click();}
 });
+G.input.touch=new TouchControls(G,{unlock:()=>G.audio?.unlock(),reload:()=>OT.player.startReload(G,G.player),pause,visible:e=>{const s=project(e.x,e.y,29);return s.x>20&&s.x<width-20&&s.y>55&&s.y<height-45&&!(s.y>height-160&&(s.x<180||s.x>width-200))&&lineOfSight(G.player.x,G.player.y,e.x,e.y);}});
+setupFullscreen({pause,isPlaying:()=>G.state==='playing'});
 G.showAimGuide=true;G.reduceShake=true;G.difficulty='recruit';
 try{const saved=JSON.parse(localStorage.getItem('ot3d_controller')||'{}');if([.1,.15,.2,.25].includes(saved.dead))G.input.dead=saved.dead;if([8,14,24].includes(saved.response))G.input.response=saved.response;if(typeof saved.gentle==='boolean')G.input.gentle=saved.gentle;if([0,3,5].includes(saved.assist))G.input.assistDegrees=saved.assist;if(typeof saved.guide==='boolean')G.showAimGuide=saved.guide;if(typeof saved.shake==='boolean')G.reduceShake=saved.shake;const mode=localStorage.getItem('ot3d_difficulty');if(['recruit','standard'].includes(mode))G.difficulty=mode;}catch{}
 G.runDifficulty=G.difficulty;try{G.hiscore=Math.max(0,Number(localStorage.getItem(highScoreKey()))||0);}catch{}
@@ -204,23 +212,23 @@ $('aim-guide').onclick=()=>{G.showAimGuide=!G.showAimGuide;saveController();};
 $('shake-setting').onclick=()=>{G.reduceShake=!G.reduceShake;G.shake=0;saveController();};
 $('difficulty').onclick=()=>{G.difficulty=G.difficulty==='recruit'?'standard':'recruit';try{localStorage.setItem('ot3d_difficulty',G.difficulty);}catch{}if(G.state==='menu'||G.state==='gameover'){G.runDifficulty=G.difficulty;try{G.hiscore=Math.max(0,Number(localStorage.getItem(highScoreKey()))||0);}catch{}}updateHUD();};
 function updateInputPrompts(){
-  if(!G.input)return;const pad=G.input.source==='pad';
+  if(!G.input)return;const pad=G.input.source==='pad',touch=G.input.touch?.enabled;
   setText('difficulty',(G.state==='paused'?'NEXT RUN: ':'DIFFICULTY: ')+G.difficulty.toUpperCase());
   setText('difficulty-help',(G.difficulty==='recruit'?'First time? Take 40% less damage, steadier moving shots, longer hit protection.':'Original combat challenge. Full damage and moving-shot spread.')+(G.state==='paused'?' Applies when you start a new run.':''));
   setText('pad-feel','STICK FEEL: '+(G.input.gentle?'GENTLE':'DIRECT'));
   setText('pad-assist','AIM ASSIST: '+(G.input.assistDegrees?G.input.assistDegrees+'°':'OFF'));
   setText('aim-guide','DIRECTION MARKER: '+(G.showAimGuide?'ON':'OFF'));setText('shake-setting','SHAKE: '+(G.reduceShake?'REDUCED':'ON'));
-  setText('input-hint',pad?'LS MOVE & FACE / RT FIRE / X RELOAD':'WASD / ARROWS MOVE / MOUSE AIM & FIRE');
-  setText('move-hint',pad?'Left stick - screen relative':'WASD or arrows - screen relative');
-  setText('engage-hint',pad?'Light aim assist - RT fire - RS optional':'Aim at soldiers - hold mouse to fire');
-  setText('survive-hint',pad?'X reload - follow AMMO markers':'R reload - follow AMMO markers');
+  setText('input-hint',touch?'LEFT THUMB MOVE / HOLD FIRE / AUTO AIM':pad?'LS MOVE & FACE / RT FIRE / X RELOAD':'WASD / ARROWS MOVE / MOUSE AIM & FIRE');
+  setText('move-hint',touch?'Left thumb pad — move and dodge':pad?'Left stick - screen relative':'WASD or arrows - screen relative');
+  setText('engage-hint',touch?'Hold FIRE — tracks a visible enemy':pad?'Light aim assist - RT fire - RS optional':'Aim at soldiers - hold mouse to fire');
+  setText('survive-hint',touch?'Tap RELOAD — follow AMMO markers':pad?'X reload - follow AMMO markers':'R reload - follow AMMO markers');
   setText('pad-status',G.input.status);setText('pad-deadzone','STICK DEAD ZONE '+Math.round(G.input.dead*100)+'%');
   setText('pad-response','AIM RESPONSE '+({8:'SMOOTH',14:'NORMAL',24:'QUICK'})[G.input.response]);
 }
-initGame();resize();rebuild();showState();
+initGame();resize();rebuild();showState();if(G.input.touch.enabled&&!G.lowQuality)toggleQuality();
 function frame(t){
   requestAnimationFrame(frame);const begin=performance.now(),raw=last?(t-last)/1000:1/60;last=t;const dt=Math.min(.05,raw);G.stateT+=dt;
-  G.input.poll(dt);updateCamera(dt);updateAim();
+  G.input.poll(dt);updateCamera(dt);G.input.touch.update(dt);updateAim();
   if(G.state==='playing'){accum+=dt;let n=0;while(accum>=1/120&&n++<6){step(1/120);accum-=1/120;}}else accum=0;
   if(G.state==='playing'||frameCount%3===0){renderModels();updateAim();atmosphere.update(G.time,G.lowQuality,height/(height<600?600:680));renderer.render(scene,camera);drawOverlay();}
   uiT+=dt;if(uiT>.1){updateHUD();uiT=0;}if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').style.display='none';}

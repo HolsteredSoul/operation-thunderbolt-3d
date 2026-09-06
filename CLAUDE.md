@@ -6,6 +6,8 @@ The survival game now includes the user-requested atmosphere and accessibility p
 
 Physical Xbox Bluetooth operation was user-confirmed in Chrome before this pass; current subjective stick feel and in-app preview support require separate human assessment. Windows users can double-click `gamestart.cmd`. The personal repository is https://github.com/HolsteredSoul/operation-thunderbolt-3d; publishing configuration should be checked on GitHub when relevant.
 
+Mobile now has a separate touch layout (`src/touch.js`): left movement pad, held FIRE with full visible-target tracking within 500 units, reload, and automatic pause in portrait. This touch-specific tracking is intentional; preserve the existing Xbox 5° and mouse behavior. Mobile starts on Low quality. `src/fullscreen.js` handles Fullscreen API entry/exit and iOS home-screen instructions; the relative manifest and app icons support GitHub Pages and local paths. Home-screen launch is online-only, with no service worker. Phone touch and Chrome fullscreen are browser-emulated checks; physical iOS/Android feel and performance still need user validation.
+
 ## Working rules
 
 1. Work within the user's requested scope. Do not start unsolicited visual, balance, progression, or game-mode passes. Keep this a survival game unless the user requests otherwise.
@@ -25,6 +27,7 @@ Physical Xbox Bluetooth operation was user-confirmed in Chrome before this pass;
 - `npm test`: simulation and 20 fixed seeds; takes several minutes.
 - `node tests/gameplay-refinements.mjs`: ammo recovery and controller input checks.
 - `node tests/controller-assist.mjs`: facing and assistance checks.
+- `node tests/mobile-controls.mjs`: touch target eligibility, firing gates, and input isolation. `tests/mobile-browser.cjs` checks multi-touch, phone rotation, and fullscreen in a fresh mobile browser context.
 - `node tests/accessibility.mjs`: difficulty, score isolation, direction-marker cover tracing, and Gentle/Direct controls.
 - `tests/*.cjs`: Playwright CLI browser function snippets, not Playwright Test specifications.
 - Raw browser artifacts and measurements are gitignored under `output/`; recorded evidence and limitations are in [VERIFICATION.md](VERIFICATION.md).

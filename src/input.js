@@ -13,23 +13,23 @@ export function turnTowards(current,target,dt,response=8){
   const change=delta*(1-Math.exp(-response*dt)),limit=3.5*dt;
   return current+Math.max(-limit,Math.min(limit,change));
 }
-// Both devices produce the same movement/fire actions consumed by the player.
+// Mouse, controller and touch share the movement/fire actions consumed by the player.
 export class Controls{
   constructor(g,handlers){this.g=g;this.handlers=handlers;this.source='mouse';this.pad=null;this.buttons=[];this.axes=[];this.move={x:0,y:0};this.direction={x:1,y:0};this.fire=false;this.fireBlocked=true;this.suspended=false;this.dead=.15;this.response=8;this.gentle=true;this.assistDegrees=5;this.status='Power on controller, click this game, then press A';this.menuAxis=0;this.menuRepeat=0;this.manualAim=false;this.autoTarget=null;this.heading=0;}
-  useMouse(){this.source='mouse';this.fire=false;this.autoTarget=null;}
-  reset(){this.move={x:0,y:0};this.fire=false;this.fireBlocked=true;this.autoTarget=null;this.manualAim=false;this.heading=this.g.player?.angle??0;}
+  useMouse(){if(this.source==='touch')this.touch?.reset();this.source='mouse';this.fire=false;this.autoTarget=null;}
+  reset(){this.touch?.reset();this.move={x:0,y:0};this.fire=false;this.fireBlocked=true;this.autoTarget=null;this.manualAim=false;this.heading=this.g.player?.angle??0;}
   poll(dt,pads){
     if(pads===undefined){
-      if(typeof navigator.getGamepads!=='function'){this.status='Gamepad API unavailable here - open in Chrome or Edge';this.reset();return;}
-      try{pads=navigator.getGamepads();}catch{this.status='Browser blocked controller access - open in Chrome or Edge';this.reset();return;}
+      if(typeof navigator.getGamepads!=='function'){this.status='Gamepad API unavailable here - open in Chrome or Edge';if(this.source==='pad')this.reset();return;}
+      try{pads=navigator.getGamepads();}catch{this.status='Browser blocked controller access - open in Chrome or Edge';if(this.source==='pad')this.reset();return;}
     }
     const list=Array.from(pads).filter(p=>p?.connected),pad=list.find(p=>p.index===this.pad&&p.mapping==='standard')||list.find(p=>p.mapping==='standard');
-    if(!pad){if(this.pad!==null){if(this.source==='pad')this.handlers.disconnect();this.reset();}this.pad=null;this.buttons=[];this.axes=[];this.status=list.length?'Controller mapping unsupported':'Power on controller, click this game, then press A';return;}
+    if(!pad){if(this.pad!==null){if(this.source==='pad'){this.handlers.disconnect();this.reset();}}this.pad=null;this.buttons=[];this.axes=[];this.status=list.length?'Controller mapping unsupported':'Power on controller, click this game, then press A';return;}
     const switched=this.pad!==pad.index;this.pad=pad.index;this.status='Xbox / standard controller connected';
     const b=pad.buttons.map(b=>b.pressed||b.value>.5),a=pad.axes,move=radial(a[0],a[1],this.dead),aim=radial(a[2],a[3],this.dead);
     const edge=i=>b[i]&&!this.buttons[i];
     const changed=a.some((v,i)=>Math.abs(v-(this.axes[i]||0))>.025),activity=b.some((v,i)=>v&&!this.buttons[i])||(changed&&(Math.hypot(move.x,move.y)>.08||Math.hypot(aim.x,aim.y)>.08));
-    if(activity&&!this.suspended){if(this.source!=='pad'){this.g.mouse.down=false;this.g.keys={};}this.source='pad';this.handlers.unlock();}
+    if(activity&&!this.suspended){if(this.source!=='pad'){this.touch?.reset();this.g.mouse.down=false;this.g.keys={};}this.source='pad';this.handlers.unlock();}
     if(switched)this.fireBlocked=true;
     if(!b[7])this.fireBlocked=false;
     if(this.source==='pad'&&!this.suspended){
@@ -53,6 +53,7 @@ export class Controls{
   }
   sample(){
     if(this.suspended||this.g.state!=='playing')return{moveX:0,moveY:0,fire:false};
+    if(this.source==='touch'&&this.touch)return this.touch.sample();
     if(this.source==='pad'){
       let aimAngle=this.heading;
       if(!this.manualAim&&this.autoTarget&&!this.autoTarget.dead&&this.autoTarget.hp>0){
