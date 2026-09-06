@@ -25,3 +25,9 @@ A second readability review showed that model differences and labels available o
 On 6 September the user approved the gameplay refinement plan and ammo review: 16-round emergency threshold, 24-round recovery, 30-second ordinary ammo lifetime, brighter bullets, slight aiming refinement and Xbox support. Enemy pressure must stay unchanged because the game is already challenging. The user subsequently rejected the stretched sniper pose specifically; it is now a compact kneeling Blender model. Other artwork remains approved.
 
 Physical Xbox testing failed in both reported browsers despite passing simulated mapping tests. Chrome exposed an empty controller list, and native XInput reported no connected device. A USB test response is pending. Never substitute simulated-controller success for a verified hardware connection; consult CONTROLLER-NOTES.md and finish this diagnosis before claiming controller completion.
+
+
+The subsequent live Bluetooth test resolved controller use in Chrome: Windows changed from paired/disconnected to connected after power-on; XInput succeeded; Chrome exposed standard Xbox VID 045e/PID 02e0 after page activation and a controller gesture. The user confirmed "The controller now works." No firmware, driver or mapping change was needed. Earlier unresolved notes are superseded for Chrome; in-app support remains separately unverified. Preserve clear power-on/press-A guidance and do not infer live connectivity from PnP enumeration alone.
+
+
+Controller preference: the user finds mandatory twin-stick control unintuitive. Default to left-stick movement/facing with only slight forward aim assistance (12-degree cone, 25% correction, 3-degree cap, no accumulating lock). Keep right stick optional and mouse input unassisted. Do not restore full automatic targeting or mandatory independent aiming without another user request.

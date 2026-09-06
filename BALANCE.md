@@ -43,3 +43,8 @@ At 16 or fewer total rounds (loaded plus reserve), one guaranteed emergency ammo
 - **Input timing:** a reload keydown starts reloading immediately, so a tap between rendered frames cannot be lost. Simulation uses fixed 1/120-second steps, with bounded catch-up. All gameplay randomness is seeded separately from appearance, effects and audio noise.
 
 The checks establish validity and preserve numerical combat balance. They do **not** establish equal difficulty between seeds or parity of difficulty with the 2D original.
+
+
+## Requested controller assistance
+
+After physical Bluetooth operation was confirmed in Chrome, the user requested simpler single-stick controls and very slight assistance. Left stick sets movement and nominal facing; releasing it retains facing. Right stick is an optional manual override. Only visible, living enemies within 547 units, with clear line of sight and within 12 degrees of nominal facing, qualify. A valid current target is retained to avoid flicker. Assistance applies 25% of the angular difference, capped at 3 degrees, measured against the fixed nominal heading so repeated updates cannot accumulate into full lock-on. The reticle shows the actual assisted firing direction. Right-stick override and keyboard/mouse receive no automatic correction. Weapon spread, damage, range, collision and enemy pressure remain unchanged.

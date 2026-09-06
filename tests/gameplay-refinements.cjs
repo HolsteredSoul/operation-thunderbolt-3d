@@ -1,6 +1,7 @@
 async(page)=>{
-  await page.reload();await page.waitForFunction(()=>window.__OT3D);await page.setViewportSize({width:1920,height:1080});
+  await page.goto('http://127.0.0.1:8083/?v=controller5');await page.waitForFunction(()=>window.__OT3D);await page.setViewportSize({width:1920,height:1080});
   const hardware=await page.evaluate(()=>Array.from(navigator.getGamepads?.()||[]).filter(Boolean).map(p=>({id:p.id,mapping:p.mapping,connected:p.connected})));
+  await page.evaluate(()=>Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[]}));
   const checks=[];
   await page.evaluate(()=>{const a=__OT3D;a.startRun('QA-03');a.G.nextWaveIn=999;a.G.player.ammo=0;a.G.player.reserve=0;window.dispatchEvent(new Event('focus'));});
   await page.waitForFunction(()=>__OT3D.G.pickups.some(p=>p.emergency));

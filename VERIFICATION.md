@@ -100,3 +100,15 @@ Evidence: output/approved-gameplay-invariants.txt, output/approved-combat-final.
 The user reported no working input in either the in-app preview or the dedicated Chrome window. Actual Chrome inspection (no gamepad fixture) showed getGamepads available, a focused secure localhost page, and an empty controller list. Windows PnP lists an Xbox Wireless Controller and Bluetooth XINPUT-compatible device with OK status, but a native XInputGetState probe returned 1167 for all four slots. This indicates no device exposed through that backend at the time of probing; it does not establish a specific hardware, firmware or driver cause. A Windows Gaming Input probe could not load the WinRT types and supplied no additional evidence. The in-app browser inspection tool failed because of the environment sandbox helper, so its API support has not been established.
 
 The user has been asked to test a USB data connection to distinguish Bluetooth detection from game mapping. Do not describe physical controller support as verified or the overall controller issue as fixed. Synthetic tests prove application behavior with standard input data only. Research and next diagnostic steps are in CONTROLLER-NOTES.md.
+
+
+## Physical Xbox issue resolved — subsequent live check
+
+A native Bluetooth probe distinguished a remembered pairing from live connection: initially disconnected, then connected after the controller was powered on. XInput then returned a connected slot with live stick values. After the Chrome page was clicked and controller input supplied, the user confirmed that it works. Chrome exposed the actual device as STANDARD GAMEPAD Vendor 045e / Product 02e0 with mapping=standard and connected=true. See output/physical-controller-working.txt and CONTROLLER-NOTES.md.
+
+Physical Bluetooth operation in Chrome is now user-verified. In-app browser support and subjective long-session controller feel remain separately unverified. No driver, firmware, pairing or browser flag changes were needed. Clearer power-on/activation and sleep/disconnect messages were added to prevent confusing an idle controller with an application failure. This section supersedes the earlier unresolved hardware status.
+
+
+## Single-stick and slight-assist follow-up
+
+The user requested simpler controls and a very slight nudge after confirming physical Xbox use. Left stick now sets movement/facing; optional right stick overrides manual aim. Assistance uses a 12-degree forward cone with 25% correction capped at 3 degrees and does not accumulate into a lock. Controller-assist unit checks pass. In-browser verification measured 1.5 degrees for a six-degree target offset, verified reticle/shot agreement, and rejected targets outside the cone or behind cover. Evidence: output/controller-assist-browser.txt and tests/controller-assist.mjs. Native probing is available as tools/controller_diagnostics.py. Further subjective tuning waits for user review.

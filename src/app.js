@@ -1,4 +1,4 @@
-import {Controls} from './input.js';
+import {Controls,chooseAutoAimTarget} from './input.js';
 import {Tracers} from './tracers.js';
 import {THREE,Batcher,buildVillage,soldier,poseSoldier,box,material} from './visuals.js';
 const $=id=>document.getElementById(id),canvas=$('scene'),overlay=$('overlay'),ctx=overlay.getContext('2d');
@@ -27,10 +27,15 @@ function project(x,y,h=29){const p=new THREE.Vector3(x,h,y).project(camera);retu
 function updateAim(){
   if(!width)return;
   if(G.input?.source==='pad'){
-    const angle=G.input.sample().aimAngle??G.player.angle,dx=Math.cos(angle),dy=Math.sin(angle),p=G.player;
-    G.mouse.wx=p.x+dx*330;G.mouse.wy=p.y+dy*330;
+    const input=G.input,p=G.player;
+    input.autoTarget=input.manualAim?null:chooseAutoAimTarget(p,G.enemies,input.autoTarget,e=>{
+      const s=project(e.x,e.y,29);return s.x>=15&&s.x<=width-15&&s.y>=80&&s.y<=height-115&&lineOfSight(p.x,p.y,e.x,e.y);
+    },input.heading);
+    const angle=input.sample().aimAngle??p.angle,dx=Math.cos(angle),dy=Math.sin(angle);
+    const reach=input.autoTarget?U.dist(p.x,p.y,input.autoTarget.x,input.autoTarget.y):330;
+    G.mouse.wx=p.x+dx*reach;G.mouse.wy=p.y+dy*reach;
     const reticle=project(G.mouse.wx,G.mouse.wy,29);G.mouse.x=reticle.x;G.mouse.y=reticle.y;
-    G.aimTarget=G.enemies.filter(e=>!e.dead&&segmentCircle(p.x,p.y,p.x+dx*547,p.y+dy*547,e,e.r)!==null).sort((a,b)=>U.dist(p.x,p.y,a.x,a.y)-U.dist(p.x,p.y,b.x,b.y))[0]||null;return;
+    G.aimTarget=input.autoTarget||(input.manualAim?G.enemies.filter(e=>!e.dead&&segmentCircle(p.x,p.y,p.x+dx*547,p.y+dy*547,e,e.r)!==null).sort((a,b)=>U.dist(p.x,p.y,a.x,a.y)-U.dist(p.x,p.y,b.x,b.y))[0]:null)||null;return;
   }
   const cast=(x,y)=>{pointer.set(x/width*2-1,1-y/height*2);raycaster.setFromCamera(pointer,camera);};
   cast(G.mouse.x,G.mouse.y);raycaster.ray.intersectPlane(plane,aimPoint);
@@ -175,7 +180,7 @@ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();loseFocus();$(
 function menuButtons(){return [...document.querySelectorAll('#modal button,header button')].filter(b=>b.offsetParent!==null&&!b.disabled);}
 G.input=new Controls(G,{
   unlock:()=>G.audio?.unlock(),pause,back:()=>{if(G.state==='paused')pause();},reload:()=>OT.player.startReload(G,G.player),
-  disconnect:()=>{if(G.state==='playing')setState('paused');G.keys={};G.mouse.down=false;toast('CONTROLLER DISCONNECTED - PAUSED');},
+  disconnect:()=>{if(G.state==='playing')setState('paused');G.keys={};G.mouse.down=false;toast('CONTROLLER DISCONNECTED OR ASLEEP - TURN IT ON, THEN RESUME');},
   menu:direction=>{const buttons=menuButtons(),i=buttons.indexOf(document.activeElement);buttons[(i+direction+buttons.length)%buttons.length]?.focus();},
   confirm:()=>{const buttons=menuButtons();(buttons.includes(document.activeElement)?document.activeElement:$('start')).click();}
 });
@@ -185,9 +190,9 @@ $('pad-deadzone').onclick=()=>{const a=[.1,.15,.2,.25];G.input.dead=a[(a.indexOf
 $('pad-response').onclick=()=>{const a=[8,14,24];G.input.response=a[(a.indexOf(G.input.response)+1)%a.length];saveController();};
 function updateInputPrompts(){
   if(!G.input)return;const pad=G.input.source==='pad';
-  setText('input-hint',pad?'LS MOVE / RS AIM / RT FIRE / X RELOAD':'WASD / ARROWS MOVE / MOUSE AIM & FIRE');
+  setText('input-hint',pad?'LS MOVE & FACE / RT FIRE / X RELOAD':'WASD / ARROWS MOVE / MOUSE AIM & FIRE');
   setText('move-hint',pad?'Left stick - screen relative':'WASD or arrows - screen relative');
-  setText('engage-hint',pad?'Right stick aim - RT fire':'Aim at soldiers - hold mouse to fire');
+  setText('engage-hint',pad?'Light aim assist - RT fire - RS optional':'Aim at soldiers - hold mouse to fire');
   setText('survive-hint',pad?'X reload - follow AMMO markers':'R reload - follow AMMO markers');
   setText('pad-status',G.input.status);setText('pad-deadzone','STICK DEAD ZONE '+Math.round(G.input.dead*100)+'%');
   setText('pad-response','AIM RESPONSE '+({8:'SMOOTH',14:'NORMAL',24:'QUICK'})[G.input.response]);

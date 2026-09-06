@@ -22,13 +22,13 @@ No missions beyond survival, elevation mechanics, extra progression, mobile cont
 
 ## Status
 
-- **Phase:** Approved gameplay pass implemented; physical Xbox detection remains unresolved.
+- **Phase:** Approved gameplay pass complete; awaiting user review.
 
-- **Last done:** Brighter tracers, approved ammo recovery, conservative aiming fixes and standard controller actions/menus passed automated checks. Corrected the sniper model through Blender MCP after follow-up feedback. See VERIFICATION.md.
+- **Last done:** Physical Xbox Bluetooth input resolved and confirmed working by the user in Chrome. Native and browser probes distinguish a remembered pairing from a live controller. Added clearer activation/sleep messages, then simplified to left-stick movement/facing with very slight assistance and an optional right-stick override at the user's request. Gameplay and sniper verification are in VERIFICATION.md.
 
-- **Next action:** Finish the physical Xbox detection check after the user's USB test response. Chrome currently exposes no real controller; do not claim hardware success. Review the kneeling sniper and gameplay changes with the user. No unrelated polish.
+- **Next action:** User review only. Physical Chrome operation is verified; in-app preview controller support is not separately verified. No unrelated polish.
 
-- **Synced to:** Gameplay refinement and sniper correction checkpoint — 2026-09-06 (see git log).
+- **Synced to:** Controller connection diagnosis and activation guidance — 2026-09-06 (see git log).
 
 ## Slips
 

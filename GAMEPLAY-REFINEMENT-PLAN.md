@@ -1,6 +1,6 @@
 # Gameplay refinement plan
 
-Status: approved and implemented; automated verification complete; physical Xbox detection unresolved, awaiting USB comparison. The user approved the current artwork and models on 6 September 2026. The next pass covers bullet visibility, ammunition recovery, small aiming refinements, and Xbox controller support.
+Status: approved and implemented; automated verification complete; physical Xbox Bluetooth operation confirmed working by the user in Chrome. The user approved the current artwork and models on 6 September 2026. The next pass covers bullet visibility, ammunition recovery, small aiming refinements, and Xbox controller support.
 
 ## 1. Make bullets readable
 
@@ -43,8 +43,8 @@ Use the browser Gamepad API with the standard mapping, polled every frame. Refer
 
 | Control | Action |
 |---|---|
-| Left stick | Screen-relative analog movement |
-| Right stick | Directional aim with a visible reticle; retain direction on release |
+| Left stick | Screen-relative analog movement and facing, with very slight aim assistance |
+| Right stick | Optional manual aiming override |
 | RT | Fire |
 | X | Reload |
 | Menu / Start | Pause or resume |
@@ -63,3 +63,5 @@ Acceptance: automated axis/button tests cover movement, dead zones, held fire, o
 ## Execution and review
 
 Implement bullet visibility and ammunition recovery first, then the shared input/aiming changes and controller support. Run focused regressions, ordinary browser-input playthroughs, physical-controller checks when available, and the capped-enemy performance scenario. Document ammunition recovery as a deliberate balance change. Stop for user review after this pass.
+
+The subsequent user-approved refinement uses only a 12-degree forward assist cone and a 25% correction capped at 3 degrees; no cumulative lock-on. See BALANCE.md for the final behavior.
