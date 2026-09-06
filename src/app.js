@@ -9,6 +9,7 @@ const ambient=new THREE.HemisphereLight('#f2eddb','#4c624e',2.25);scene.add(ambi
 const sun=new THREE.DirectionalLight('#ffe2af',3.2);sun.position.set(550,1200,300);sun.target.position.set(1200,0,900);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-1500,right:1500,top:1500,bottom:-1500,near:10,far:3500});sun.shadow.bias=-.0003;sun.shadow.normalBias=1;sun.shadow.radius=3;scene.add(sun,sun.target);
 const dynamic=new Batcher(scene,true),models=new Map(),effectRoot=new THREE.Group();
 const contactGeo=new THREE.CircleGeometry(1,20),contactMat=new THREE.MeshBasicMaterial({color:'#25352a',transparent:true,opacity:.25,depthWrite:false});
+const ROLE_STYLE={rifleman:{label:'RIFLEMAN',height:53,width:13,color:'#adc7d8'},officer:{label:'OFFICER',height:51,width:14,color:'#e4bd78'},sniper:{label:'SNIPER',height:47,width:18,color:'#b9ca8a'},nest:{label:'MG NEST',height:46,width:37,color:'#e0b092'}};
 const raycaster=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),-29),aimPoint=new THREE.Vector3(),pointer=new THREE.Vector2();
 let destroyVillage=()=>{},width=0,height=0,last=0,accum=0,uiT=0,toastT=0,frames=[],cpuFrames=[],frameCount=0;
 const bulletGeo=new THREE.BufferGeometry(),bulletPositions=new Float32Array(240*6),bulletColors=new Float32Array(240*6);
@@ -28,8 +29,8 @@ function updateAim(){
   pointer.set(G.mouse.x/width*2-1,1-G.mouse.y/height*2);raycaster.setFromCamera(pointer,camera);raycaster.ray.intersectPlane(plane,aimPoint);
   let target=null,best=Infinity;
   // Screen silhouette targeting compensates for model height without changing collision/range.
-  for(const e of G.enemies){if(e.dead)continue;const feet=project(e.x,e.y,5),head=project(e.x,e.y,51),cx=(feet.x+head.x)/2,cy=(feet.y+head.y)/2;
-    const rx=(e.type==='nest'?27:13)*height/680+4,ry=Math.abs(feet.y-head.y)/2+5;
+  for(const e of G.enemies){if(e.dead)continue;const role=ROLE_STYLE[e.type],feet=project(e.x,e.y,5),head=project(e.x,e.y,role.height),cx=(feet.x+head.x)/2,cy=(feet.y+head.y)/2;
+    const rx=role.width*height/680+4,ry=Math.abs(feet.y-head.y)/2+5;
     const d=((G.mouse.x-cx)/rx)**2+((G.mouse.y-cy)/ry)**2;if(d<=1&&d<best){best=d;target=e;}
   }
   G.aimTarget=target;G.mouse.wx=target?target.x:aimPoint.x;G.mouse.wy=target?target.y:aimPoint.z;
@@ -55,7 +56,7 @@ function drawOverlay(){
   ctx.strokeStyle=p.invulnT>0?'#e39c74':'#e5dab3';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(pp.x,pp.y,19*height/680,10*height/680,0,0,TAU);ctx.stroke();
   // Threat bearings make distant stationary enemies findable.
   for(const e of G.enemies){
-    const s=project(e.x,e.y,58),off=s.x<24||s.x>width-24||s.y<90||s.y>height-140;
+    const s=project(e.x,e.y,ROLE_STYLE[e.type].height+9),off=s.x<24||s.x>width-24||s.y<90||s.y>height-140;
     if(off){const dx=s.x-width/2,dy=s.y-height/2,k=Math.min((width/2-30)/Math.max(1,Math.abs(dx)),(height/2-150)/Math.max(1,Math.abs(dy)));const x=width/2+dx*k,y=height/2+dy*k;
       ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(dy,dx));ctx.fillStyle=e.telegraphT>0?'#ff715c':'#e4af81';ctx.beginPath();ctx.moveTo(6,0);ctx.lineTo(-4,-4);ctx.lineTo(-4,4);ctx.fill();ctx.restore();
       if(e.type==='sniper'||e.type==='nest'){ctx.fillStyle='#f0d4b0';ctx.font='9px Consolas';ctx.textAlign='center';ctx.fillText(e.type==='sniper'?'S':'MG',x,y+17);}
@@ -70,7 +71,13 @@ function drawOverlay(){
     const x=G.mouse.x,y=G.mouse.y,target=G.aimTarget,blocked=target&&!lineOfSight(p.x,p.y,target.x,target.y),far=target&&U.dist(p.x,p.y,target.x,target.y)>547;
     ctx.strokeStyle=blocked?'#e9ba7a':target&&!far?'#ed9874':'#f7ecd2';ctx.lineWidth=1.4;const gap=p.moving?9:5;
     ctx.beginPath();for(const [dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){ctx.moveTo(x+dx*gap,y+dy*gap);ctx.lineTo(x+dx*(gap+7),y+dy*(gap+7));}ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.fillRect(x-1,y-1,2,2);
-    if(blocked||far){ctx.font='9px Consolas';ctx.textAlign='center';ctx.fillText(blocked?'COVER':'OUT OF RANGE',x,y+28);}
+    if(target){
+      const role=ROLE_STYLE[target.type];ctx.font='bold 11px Consolas';ctx.textAlign='center';
+      const labelWidth=ctx.measureText(role.label).width+16;
+      ctx.fillStyle='#182522e8';ctx.fillRect(x-labelWidth/2,y+17,labelWidth,19);
+      ctx.fillStyle=role.color;ctx.fillText(role.label,x,y+30);
+    }
+    if(blocked||far){ctx.font='9px Consolas';ctx.textAlign='center';ctx.fillText(blocked?'COVER':'OUT OF RANGE',x,y+48);}
     if(p.reloadT>0){ctx.strokeStyle='#ddc082';ctx.lineWidth=3;ctx.beginPath();ctx.arc(pp.x,pp.y-60,12,-Math.PI/2,-Math.PI/2+TAU*(1-p.reloadT/1.15));ctx.stroke();}
   }
 }

@@ -7,8 +7,9 @@ const pack=await fetch('./assets/village-pack.json').then(r=>{if(!r.ok)throw Err
 const blenderAssets={};
 for(const [name,parts]of Object.entries(pack.assets))blenderAssets[name]=parts.map(p=>{const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p.positions,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(p.normals,3));return{...p,positions:undefined,normals:undefined,geometry};});
 function blenderModel(name){
- const root=new THREE.Group(),joints=new Map(),palette={uniform:'#717953',helmet:'#596340',skin:'#c4a17a',boots:'#343833',webbing:'#98916a',wood:'#8b6d48',metal:'#303b39',band:'#b58159',sand:'#b5a580',stone:'#a3a18d',brick:'#ad8268'};
- if(name==='rifleman'){palette.uniform='#687a78';palette.helmet='#445652';}if(name==='officer'){palette.uniform='#414945';palette.helmet='#303b37';}if(name==='sniper'){palette.uniform='#667052';palette.helmet='#525c39';}
+ const root=new THREE.Group(),joints=new Map(),palette={uniform:'#a18e60',helmet:'#58623e',skin:'#c4a17a',boots:'#343833',webbing:'#98916a',wood:'#8b6d48',metal:'#303b39',band:'#ae4434',cloak:'#465e35',accent:'#dfd5a6',ammo:'#69704a',sand:'#b5a580',stone:'#a3a18d',brick:'#ad8268'};
+ if(name==='rifleman'){palette.uniform='#557486';palette.helmet='#354b58';palette.webbing='#6b7779';}if(name==='officer'){palette.uniform='#303337';palette.helmet='#25272b';palette.webbing='#70533d';palette.accent='#c9a45e';}if(name==='sniper'){palette.uniform='#71804c';palette.helmet='#465635';palette.accent='#dc9e65';}
+ if(name==='nest'){palette.uniform='#555e59';palette.helmet='#36463c';palette.metal='#303d3b';}
  const body=new THREE.Group();root.add(body);joints.set('body',body);
  for(const p of blenderAssets[name]){let joint=joints.get(p.joint);if(!joint){joint=new THREE.Group();joint.position.fromArray(p.pivot);body.add(joint);joints.set(p.joint,joint);}const mesh=new THREE.Mesh(p.geometry,material(palette[p.material]));joint.add(mesh);}
  root.userData={body,legs:[joints.get('legL'),joints.get('legR')].filter(Boolean),gun:joints.get('gun')||new THREE.Group(),blender:true};return root;

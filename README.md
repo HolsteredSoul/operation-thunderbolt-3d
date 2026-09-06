@@ -27,7 +27,7 @@ Open [the game](http://127.0.0.1:8083). Keep the server terminal open. Stop it w
 | X | Reduce shake |
 | Quality button | Toggle cached scenery shadows / reduced rendering quality |
 
-Losing focus pauses the simulation and clears held inputs. No pointer lock is required. Low cutaway walls, crates, sandbags, and raised rubble block movement and gunfire across their footprints. Ground litter, floorboards, and roads are traversable. The reticle indicates covered or out-of-range targets. Red sniper lines and a screen warning remain visible even when the sniper is outside the viewport. Small edge bearings show distant enemies; S and MG distinguish stationary threats.
+Losing focus pauses the simulation and clears held inputs. No pointer lock is required. Low cutaway walls, crates, sandbags, and raised rubble block movement and gunfire across their footprints. Ground litter, floorboards, and roads are traversable. The reticle indicates covered or out-of-range targets. Red sniper lines and a screen warning remain visible even when the sniper is outside the viewport. Small edge bearings show distant enemies; S and MG distinguish stationary threats. Aiming at an enemy displays its role name. Allied infantry wear khaki; riflemen wear blue-grey; officers carry pistols under peaked caps and long dark coats; snipers kneel under broad green hoods; MG gunners sit in wide sandbag emplacements.
 
 The seed field accepts up to 32 characters. Replay retains the layout and initial random streams; different inputs can produce different combat outcomes. Fresh Layout immediately starts a new run. High score uses `ot3d_hiscore_v1`, separate from the original game's key.
 

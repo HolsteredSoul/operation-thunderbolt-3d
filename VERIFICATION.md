@@ -53,3 +53,14 @@ This clears the average 60 FPS target under the stated conditions. It is **not**
 - Sound recipes and controls were exercised; a human listening pass remains useful.
 
 This completes the requested first version. Further balance or visual work waits for the user's review.
+
+
+## Requested unit-readability pass - 6 September 2026
+
+The user found the original models too similar. Blender MCP was used to rebuild all five soldier appearances. The player now has khaki kit and contrasting webbing, riflemen use blue-grey uniforms, officers have long dark coats, peaked caps and pistols, snipers kneel under broad hooded capes with long scoped rifles, and MG gunners have a low, wide emplacement and heavy weapon. The previous asset scene is saved as assets/before-role-readability.blend. An export script preserves scenery while replacing character meshes.
+
+The reticle now names the selected enemy role. Its silhouette selection bounds match the revised models; health, damage, movement speed, actual collision radii, firing, drops and waves are unchanged.
+
+All four enemy types were selected correctly by aiming at their visible upper bodies. The side-by-side screenshot at output/playwright/role-comparison.png uses actual gameplay scale; the role labels in that comparison are QA annotations. The production game displays a role name on aim. All 15 browser control/state/targeting checks passed again, including three viewport sizes and head-target projectile kills.
+
+The same 34-enemy, 1080p headed Chrome / Iris Xe workload measured 88.5 FPS mean on High (20 ms p95 frame, 7.7 ms median CPU work) and 97.4 FPS on Low. These short-run differences from the first measurement are not claims of a further optimization. Raw results: output/role-readability.txt, output/role-browser-checks.txt and output/role-performance.txt. No simulation or generation code changed, so the previously completed seed and combat invariant results still apply.
