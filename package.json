@@ -1,0 +1,13 @@
+{
+  "name": "operation-thunderbolt-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node tests/invariants.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

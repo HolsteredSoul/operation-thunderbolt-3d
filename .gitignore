@@ -1,0 +1,7 @@
+node_modules/
+output/
+.playwright-cli/
+*.tgz
+
+*.blend1
+*.blend2
