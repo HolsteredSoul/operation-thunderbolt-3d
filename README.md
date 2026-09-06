@@ -1,63 +1,104 @@
 # Operation Thunderbolt — The Village
 
-A complete local 3D isometric survival shooter. Move, aim, shoot, use cover, reload, collect supplies and four capped upgrades, survive waves, and replay the same seed or a fresh village.
+A playable 3D isometric survival shooter set in a ruined French village. Move between cover, manage your ammunition, collect upgrades, and hold out against increasingly demanding waves.
 
-## Launch
+Built with plain JavaScript, Three.js, Blender-authored models, and procedural audio. All runtime assets are included: no package installation, build step, or Blender installation is required to play.
 
-Requires Node.js 20 or newer and a desktop browser with WebGL 2. No package installation, build step, network connection, or Blender installation is needed to play.
+## Start playing
 
-```powershell
-cd C:\DEV\Thunderbolt_3d
+Requires **Node.js 20 or newer** and a desktop browser with **WebGL 2**. Chrome is recommended for the Xbox controller setup verified on this project.
+
+```sh
+git clone https://github.com/HolsteredSoul/operation-thunderbolt-3d.git
+cd operation-thunderbolt-3d
 npm start
 ```
 
-Open [the game](http://127.0.0.1:8083). Keep the server terminal open. Stop it with Ctrl+C. If the port is busy, set `$env:PORT='8084'` before `npm start` and open that port instead. Opening `index.html` directly is unsupported because browsers restrict local module and mesh loading.
+Open **[http://127.0.0.1:8083](http://127.0.0.1:8083)** and click **DEPLOY**, or press Enter. Keep the terminal open while playing; Ctrl+C stops the server. This private repository requires GitHub access to clone.
+
+Already have the project? Open a terminal in its folder and run `npm start`. See the **[Quickstart guide](QUICKSTART.md)** for the existing Windows checkout, controller setup, alternate ports, and troubleshooting.
+
+## Features
+
+- Seeded villages with solid cover, cutaway walls, and rubble, with endless survival waves.
+- Four visually distinct enemy roles: riflemen, officers, snipers, and machine-gun nests.
+- Health supplies, ammunition, and four capped upgrades that reset each run.
+- Persistent emergency ammo supplies when ammunition runs low, with a visible direction marker.
+- Keyboard/mouse and Xbox controller input, including single-stick movement/facing and slight aim assistance.
+- Pause, replay the same seed, generate a fresh layout, and a browser-local high score.
+- Local mesh assets, vendored rendering dependencies, and procedural sound; play offline after downloading the project and installing Node.js.
 
 ## Controls
 
+### Keyboard and mouse
+
 | Input | Action |
-|---|---|
-| WASD / arrow keys | Move relative to the screen; diagonals normalized |
-| Mouse | Aim at the visible soldier |
-| Hold primary mouse button | Fire; automatically reload an empty magazine if reserves remain |
+| --- | --- |
+| WASD / arrow keys | Move relative to the screen |
+| Mouse | Aim |
+| Hold left mouse button | Fire; reload automatically when the magazine is empty and reserves remain |
 | R | Reload |
 | P / Escape | Pause / resume |
 | Enter / Space | Deploy, resume, or replay |
-| M | Mute |
-| X | Reduce shake |
-| Quality button | Toggle cached scenery shadows / reduced rendering quality |
+| M | Mute / unmute |
+| X | Toggle reduced shake |
+| Quality button | Switch rendering quality |
 
-Losing focus pauses the simulation and clears held inputs. No pointer lock is required. Low cutaway walls, crates, sandbags, and raised rubble block movement and gunfire across their footprints. Ground litter, floorboards, and roads are traversable. The reticle indicates covered or out-of-range targets. Red sniper lines and a screen warning remain visible even when the sniper is outside the viewport. Small edge bearings show distant enemies; S and MG distinguish stationary threats. Persistent combat badges identify RIFLE, OFFICER, SNIPER and MG NEST with distinct symbols and colors. The player has a mint YOU marker and ground ring. Aiming at an enemy also displays its full role name. Allied infantry wear khaki; riflemen wear blue-grey; officers carry pistols under peaked caps and long dark coats; snipers use a compact kneeling pose with a shouldered scoped rifle and short camouflage cape; MG gunners sit in wide sandbag emplacements.
+### Xbox controller
 
-The seed field accepts up to 32 characters. Replay retains the layout and initial random streams; different inputs can produce different combat outcomes. Fresh Layout immediately starts a new run. High score uses `ot3d_hiscore_v1`, separate from the original game's key.
+Power on and connect the controller, open the game in Chrome, click inside the page, then press **A** to activate controller input.
 
-## Assets and implementation
+| Input | Action |
+| --- | --- |
+| Left stick | Move and set facing; releasing it keeps your facing |
+| RT | Fire |
+| X | Reload |
+| Right stick (optional) | Manually override aim |
+| Menu | Pause / resume |
+| D-pad / left stick in menus | Select a button |
+| A | Confirm selection |
+| B | Resume from pause |
 
-The soldiers, officer, sniper, MG emplacement, crates, sandbags, rubble and broken masonry were authored **through Blender MCP**, then exported as local triangle meshes. The editable file is `assets/thunderbolt-workshop.blend` (scene: Thunderbolt Asset Workshop); `assets/village-pack.json` is the runtime mesh pack. The pre-existing cottage was preserved in `assets/cottage-preserved.blend`. No Blender GUI automation or GPU rendering was used.
+The right stick is optional. Slight assistance nudges shots toward visible enemies already close to your facing direction. It corrects 25% of the angle, capped at 3 degrees, within a 12-degree cone, and does not build into a target lock. Manual right-stick aim overrides it. Stick dead zone and aim response can be adjusted in the menu.
 
-The renderer loads the pack into shared Three.js geometries, instances scenery and characters by material, animates leg and rifle pivots, caches static directional shadows, and uses lightweight contact shadows for moving soldiers. Three.js 0.185.1 is vendored locally with its MIT license. See [official Three.js documentation](https://threejs.org/docs/). Audio uses the original game's procedural Web Audio recipes. No remote fonts, textures, scripts, or asset requests are made.
+Controller navigation highlights menu buttons; it does not move the operating-system pointer. Losing focus or disconnecting the active controller pauses the game. Reconnect, release the trigger, and deliberately resume. Physical Xbox Bluetooth input has been confirmed in Chrome; controller support in the Codex in-app preview has not been separately verified.
 
-`C:\DEV\Thunderbolt_WWII` remains the preserved reference. Its current source, rather than the older GAME_MEMORY.md, supplied the combat values. [BALANCE.md](BALANCE.md) records retained values and adaptation differences. [VERIFICATION.md](VERIFICATION.md) records the tests, actual browser-input playthroughs, performance, and limitations.
+## Surviving the village
 
-## Verify
+Use walls, crates, sandbags, and raised rubble to block incoming fire. Ground litter and floorboards are traversable. The aiming reticle warns when a target is covered or out of range. Watch sniper warning lines and the bearings for distant enemies.
 
-```powershell
+You begin with 8 rounds loaded and 72 in reserve. At 16 total rounds or fewer, follow **AMMO +24** to an emergency supply. It replenishes reserves, so reload to use it. Emergency supplies persist until collected, and further supplies can appear after later depletion. Ordinary ammo drops grant 16 rounds and remain for 30 seconds. Enemy strength and wave pressure were retained during the ammo changes.
+
+Replay keeps your seed and village layout; **FRESH LAYOUT** starts a new run. High scores are stored in the current browser, not synced across machines.
+
+## Development
+
+| Path | Purpose |
+| --- | --- |
+| `src/app.js`, `src/input.js` | Browser integration, HUD, camera, and controls |
+| `src/core.js`, `src/player.js`, `src/enemies.js`, `src/supplies.js` | Combat and gameplay |
+| `src/layout.js`, `src/ammo-placement.js` | Village generation and reachable supplies |
+| `src/visuals.js`, `src/tracers.js`, `src/audiofx.js` | Models, shot feedback, and sound |
+| `assets/village-pack.json` | Runtime triangle-mesh pack |
+| `assets/thunderbolt-workshop.blend` | Editable Blender asset workshop |
+| `vendor/` | Local Three.js 0.185.1 modules and MIT license |
+| `server.mjs` | Local Node.js web server |
+| `tests/` | Simulation checks and browser verification snippets |
+
+The soldiers and scenery were authored through Blender MCP. The editable workshop and asset checkpoints are included, including the preserved cottage. Runtime models share geometry and materials; scenery uses instancing and cached static shadows.
+
+This project adapts the existing Thunderbolt_WWII survival game. The original local reference is preserved separately and is not needed to run this repository. Combat values and adaptation differences are recorded in [BALANCE.md](BALANCE.md).
+
+### Checks
+
+```sh
 npm test
+node tests/gameplay-refinements.mjs
+node tests/controller-assist.mjs
 ```
 
-This runs the independent Node simulation checks, including 20 fixed seeds; it takes several minutes. Results go into `output/invariants.json`. The Playwright CLI function snippets under `tests/` document and reproduce browser verification against the running server; they are not Playwright Test specifications. Browser artifacts are saved under `output/playwright/`.
+`npm test` runs independent simulation checks across 20 fixed seeds and takes several minutes. Results are written under the ignored `output/` directory. The focused checks cover ammo recovery, controller mappings, and slight aim assistance.
 
-The `window.__OT3D` handle supports controlled verification from browser developer tools. It is not required for normal play.
+The `tests/*.cjs` files are Playwright CLI function snippets for a running game, not Playwright Test specifications. Browser tooling is optional and is not needed to play. `window.__OT3D` exposes controlled browser-verification helpers.
 
-
-## Approved gameplay refinement
-
-Bullets now have four-pixel contrasting tracers with bright cores; their collision radius, damage and speed are unchanged. Aim selection uses the Blender mesh with a small three-pixel tolerance, and selected moving targets update their combat center before firing.
-
-At 16 total rounds or fewer, follow the AMMO +24 marker to a persistent emergency supply. It replenishes reserve ammunition; reload normally. Further emergency supplies can appear after later depletion. Ordinary ammo drops still grant 16 rounds and now stay for 30 seconds. Enemy strength and wave pressure are unchanged.
-
-Xbox controls: left stick moves and sets facing, with light aim assistance toward visible enemies already within 12 degrees of that direction; RT fires, X reloads, Menu pauses/resumes. Assistance corrects only 25% of the angular difference, at most 3 degrees, and never accumulates into a lock-on. Right stick aiming is an optional manual override while held. D-pad or left stick navigates menus, A confirms, and B resumes from pause. Click the game once and press a controller button to activate browser input/audio. The pause/menu screen offers saved stick dead-zone and aim-response settings. Disconnecting the active controller pauses the game; reconnecting requires deliberate resume and a released trigger before firing again. Keyboard/mouse remains available.
-
-For physical controller use, open http://127.0.0.1:8083/?v=gameplay4 in Chrome or Edge. Physical Bluetooth Xbox input was confirmed working by the user in Chrome. If it stops responding after inactivity, power the controller back on, click the game and press A. A remembered Bluetooth pairing alone does not establish a live connection. The in-app preview remains separately unverified; the connection message reports missing or blocked Gamepad API access. A supported standard browser mapping is required.
-
-Additional focused checks: `node tests/gameplay-refinements.mjs`. Browser controller fixtures are simulated standard gamepads; physical controller results are recorded separately in VERIFICATION.md.
+See [VERIFICATION.md](VERIFICATION.md) for recorded test results, playthroughs, measured performance, and limitations; [CONTROLLER-NOTES.md](CONTROLLER-NOTES.md) for controller diagnostics; and [AMMO-BALANCE-REVIEW.md](AMMO-BALANCE-REVIEW.md) for the ammo design review.

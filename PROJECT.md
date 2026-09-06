@@ -22,13 +22,13 @@ No missions beyond survival, elevation mechanics, extra progression, mobile cont
 
 ## Status
 
-- **Phase:** Approved gameplay pass complete; awaiting user review.
+- **Phase:** Approved gameplay pass complete; personal GitHub repository and launch documentation prepared.
 
-- **Last done:** Physical Xbox Bluetooth input resolved and confirmed working by the user in Chrome. Native and browser probes distinguish a remembered pairing from a live controller. Added clearer activation/sleep messages, then simplified to left-stick movement/facing with very slight assistance and an optional right-stick override at the user's request. Gameplay and sniper verification are in VERIFICATION.md.
+- **Last done:** Created the private personal repository at https://github.com/HolsteredSoul/operation-thunderbolt-3d, rewrote README.md, and added QUICKSTART.md for local launch and fresh clones. Verified documentation links and HTTP delivery of the page, app, controller input, meshes, and renderer. Physical Xbox Bluetooth input resolved and confirmed working by the user in Chrome. Native and browser probes distinguish a remembered pairing from a live controller. Added clearer activation/sleep messages, then simplified to left-stick movement/facing with very slight assistance and an optional right-stick override at the user's request. Gameplay and sniper verification are in VERIFICATION.md.
 
 - **Next action:** User review only. Physical Chrome operation is verified; in-app preview controller support is not separately verified. No unrelated polish.
 
-- **Synced to:** Controller connection diagnosis and activation guidance — 2026-09-06 (see git log).
+- **Synced to:** Personal GitHub repository and quickstart documentation — 2026-09-06 (see git log).
 
 ## Slips
 
