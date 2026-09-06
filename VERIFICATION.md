@@ -73,3 +73,30 @@ The user still found soldiers difficult to identify during play. Persistent, hig
 All five labels were verified while the mouse was away from every actor and no aim target existed. The production badges were inspected at 1080p, captured at 720p, and inspected under the 34-enemy stress setup. Fifteen existing browser controls/targeting/state checks were rerun. The same Iris Xe / headed Chrome / 1080p stress setup measured 91.4 FPS mean on High with a 20 ms p95 frame. This is a short-run measurement, not a claim of additional performance optimization.
 
 Evidence: output/persistent-role-badges.txt, output/badges-browser-checks.txt, output/badges-performance.txt and output/playwright/persistent-role-badges.png. This pass changes combat overlays only; model geometry, camera projection, collision, statistics, AI and generation are unchanged.
+
+
+## Approved gameplay pass and sniper correction — 6 September 2026
+
+Implemented four-pixel depth-tested tracers, mesh targeting with a three-pixel tolerance, current-target position updates before firing, the approved emergency ammo economy, and browser standard-gamepad actions/menu navigation. No enemy HP, damage, speed, wave composition, pacing, weapon damage or spread was changed. Ordinary ammo lifetime is now 30 seconds; emergency ammo triggers at 16 total rounds and grants 24 reserve rounds. Health/upgrade expiry stays 14 seconds.
+
+All five models were independently rebuilt through Blender MCP with native role materials. The user then approved the visuals except for a follow-up complaint about the sniper pose. Only that model was subsequently rebuilt in a compact one-knee stance with a shouldered scoped rifle and short cape. The old pose is preserved in assets/before-sniper-kneeling.blend. The runtime pack revision is kneeling-sniper-v4; the workshop is saved. A label-free comparison was visually inspected, and all four enemy roles passed mesh targeting.
+
+Validation completed:
+
+- Full npm test: 11 groups including all 20 fixed seeds. A later combat-only pass completed 10 groups after adding resupply telemetry.
+- Emergency recovery: actual collision movement and pickup collection from zero ammo, without kills, on 20 seeds × 4 positions. Threshold, repeated recovery, seeded replay, non-expiry, reserve cap, reload, independent pickup lifetimes and wall-blocked collection passed.
+- Input unit checks: analog half/full speed, normalized diagonals, dead zone, source switching, button edges, held-trigger gating, pause/disconnect, and graceful unavailable/blocked Gamepad API behavior passed.
+- Fifteen existing real browser controls/state/targeting checks passed. Fourteen new browser checks passed, including keyboard-driven empty-ammo collection/reload/firing, simulated controller deployment, aiming, RT/X, pause, disconnect, D-pad/left-stick menus, mouse takeover and drift filtering.
+- The automated browser suite initially exposed a mouse takeover bug when pointer movement deltas were zero. Comparing physical cursor positions fixed it; the complete focused suite passed on rerun.
+
+Two approximately 48–50 second ordinary keyboard/mouse playthroughs used existing navigation information to guide collection, with no health, ammo, upgrades or enemy-stat cheats. QA-03 reached wave 2, killed 12 and died with 18 rounds remaining; it collected one emergency supply. QA-11 reached wave 2, killed 9 and retained 52 HP; it collected three emergency supplies. Both recorded zero seconds completely empty. These are agent-operated samples, not human difficulty validation or a controlled win-rate comparison.
+
+The 34-enemy 1080p headed Chrome / Iris Xe workload measured 63.4 FPS mean High (20.6 ms p95) and 79.5 FPS Low (20.1 ms p95). About 270k triangles and 80 draws were recorded on High. Other game previews were open; these short measurements are not a locked-60 guarantee. The later compact sniper reduces mesh size but was not claimed as a separately measured optimization.
+
+Evidence: output/approved-gameplay-invariants.txt, output/approved-combat-final.txt, output/gameplay-refinements-unit.txt, output/approved-browser-checks.txt, output/approved-refinements-browser-final.txt, output/approved-ammo-playthroughs.txt, output/approved-gameplay-performance.txt, output/kneeling-sniper-check.txt and output/playwright/.
+
+### Physical Xbox test is unresolved
+
+The user reported no working input in either the in-app preview or the dedicated Chrome window. Actual Chrome inspection (no gamepad fixture) showed getGamepads available, a focused secure localhost page, and an empty controller list. Windows PnP lists an Xbox Wireless Controller and Bluetooth XINPUT-compatible device with OK status, but a native XInputGetState probe returned 1167 for all four slots. This indicates no device exposed through that backend at the time of probing; it does not establish a specific hardware, firmware or driver cause. A Windows Gaming Input probe could not load the WinRT types and supplied no additional evidence. The in-app browser inspection tool failed because of the environment sandbox helper, so its API support has not been established.
+
+The user has been asked to test a USB data connection to distinguish Bluetooth detection from game mapping. Do not describe physical controller support as verified or the overall controller issue as fixed. Synthetic tests prove application behavior with standard input data only. Research and next diagnostic steps are in CONTROLLER-NOTES.md.

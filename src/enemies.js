@@ -233,7 +233,9 @@ OT.enemies = (() => {
         G.pickups.push({ x: spot.x, y: spot.y, type: U.pick(upTypes), t: 0, isUpgrade: true });
       } else if (U.random() < 0.22) {
         const spot = nudgePickup(G, e.x, e.y);
-        G.pickups.push({ x: spot.x, y: spot.y, type: U.random() < 0.4 ? 'health' : 'ammo', t: 0 });
+        const type=U.random() < 0.4 ? 'health' : 'ammo';
+        G.pickups.push({ x: spot.x, y: spot.y, type, t: 0, ...(type==='ammo'?{amount:16,lifetime:30}:{}) });
+        if(type==='ammo')G.stats.ammoGenerated=(G.stats.ammoGenerated||0)+16;
       }
       G.enemies.splice(i, 1);
     }

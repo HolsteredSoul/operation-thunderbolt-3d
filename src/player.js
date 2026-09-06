@@ -97,9 +97,11 @@ OT.player = (() => {
     if (k['KeyA'] || k['ArrowLeft']) dx -= 1;
     if (k['KeyD'] || k['ArrowRight']) dx += 1;
 
+    const actions=G.input?.sample();
+    if(actions){dx=actions.moveX;dy=actions.moveY;}
     if (dx !== 0 || dy !== 0) {
       const len = Math.sqrt(dx * dx + dy * dy);
-      dx /= len; dy /= len;
+      if(!actions){dx /= len; dy /= len;}
       const step = SPEED * dt;
       moveCircle(p, (dx + dy) * Math.SQRT1_2 * step, (dy - dx) * Math.SQRT1_2 * step);
       p.moving = true;
@@ -110,7 +112,8 @@ OT.player = (() => {
     }
 
     // ---- aim ----
-    p.angle = U.angTo(p.x, p.y, G.mouse.wx, G.mouse.wy);
+    if(G.aimTarget&&!G.aimTarget.dead){G.mouse.wx=G.aimTarget.x;G.mouse.wy=G.aimTarget.y;}
+    p.angle = actions?.aimAngle ?? U.angTo(p.x, p.y, G.mouse.wx, G.mouse.wy);
 
     // ---- reload input ----
     if (G.keys['KeyR']) {
@@ -119,7 +122,7 @@ OT.player = (() => {
 
     // ---- firing ----
     if (p.reloadT <= 0) {
-      if (G.mouse.down) {
+      if (actions?actions.fire:G.mouse.down) {
         if (p.ammo > 0) {
           if (p.fireCd <= 0) {
             p.fireCd = p.fireCdBase;

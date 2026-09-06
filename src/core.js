@@ -51,6 +51,7 @@ function updateBullets(dt){
 }
 function damagePlayer(d){
   const p=G.player;if(!p||p.hp<=0||p.invulnT>0)return;
+  if(p.ammo+p.reserve<=16&&G.pickups.some(pk=>pk.emergency))G.stats.resupplyDamage=(G.stats.resupplyDamage||0)+Math.min(p.hp,d);
   p.hp=Math.max(0,p.hp-d);p.invulnT=.55;addShake(6);G.ui.flash('red');G.audio.play('playerHurt');
   if(!p.hp){G.fx.corpse(p);setState('gameover');G.audio.play('die');G.newRecord=G.score>G.hiscore;G.hiscore=Math.max(G.hiscore,G.score);try{localStorage.setItem('ot3d_hiscore_v1',String(G.hiscore));}catch{}}
 }

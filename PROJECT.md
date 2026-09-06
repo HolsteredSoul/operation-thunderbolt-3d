@@ -22,15 +22,13 @@ No missions beyond survival, elevation mechanics, extra progression, mobile cont
 
 ## Status
 
-- **Phase:** 3 — verified first version; awaiting review.
+- **Phase:** Approved gameplay pass implemented; physical Xbox detection remains unresolved.
 
-- **Last done:** Completed the follow-up identification pass: persistent role badges with distinct symbols, a YOU marker and player ring; browser checks and capped-population inspection passed. See VERIFICATION.md.
+- **Last done:** Brighter tracers, approved ammo recovery, conservative aiming fixes and standard controller actions/menus passed automated checks. Corrected the sniper model through Blender MCP after follow-up feedback. See VERIFICATION.md.
 
-- **Next action:** User review only. Do not start another polish cycle without a request.
+- **Next action:** Finish the physical Xbox detection check after the user's USB test response. Chrome currently exposes no real controller; do not claim hardware success. Review the kneeling sniper and gameplay changes with the user. No unrelated polish.
 
-- **Synced to:** Persistent role-badge implementation commit — 2026-09-06 (see git log).
-
-
+- **Synced to:** Gameplay refinement and sniper correction checkpoint — 2026-09-06 (see git log).
 
 ## Slips
 

@@ -11,8 +11,8 @@ function blenderModel(name){
  if(name==='rifleman'){palette.uniform='#557486';palette.helmet='#354b58';palette.webbing='#6b7779';}if(name==='officer'){palette.uniform='#303337';palette.helmet='#25272b';palette.webbing='#70533d';palette.accent='#c9a45e';}if(name==='sniper'){palette.uniform='#71804c';palette.helmet='#465635';palette.accent='#dc9e65';}
  if(name==='nest'){palette.uniform='#555e59';palette.helmet='#36463c';palette.metal='#303d3b';}
  const body=new THREE.Group();root.add(body);joints.set('body',body);
- for(const p of blenderAssets[name]){let joint=joints.get(p.joint);if(!joint){joint=new THREE.Group();joint.position.fromArray(p.pivot);body.add(joint);joints.set(p.joint,joint);}const mesh=new THREE.Mesh(p.geometry,material(palette[p.material]));joint.add(mesh);}
- root.userData={body,legs:[joints.get('legL'),joints.get('legR')].filter(Boolean),gun:joints.get('gun')||new THREE.Group(),blender:true};return root;
+ for(const p of blenderAssets[name]){let joint=joints.get(p.joint);if(!joint){joint=new THREE.Group();joint.position.fromArray(p.pivot);body.add(joint);joints.set(p.joint,joint);}const mesh=new THREE.Mesh(p.geometry,material(pack.materials?.[p.material]??palette[p.material]));joint.add(mesh);}
+ root.userData={body,legs:[joints.get('legL'),joints.get('legR')].filter(Boolean),gun:joints.get('gun')||new THREE.Group(),blender:true};root.updateMatrixWorld(true);root.userData.aimBounds=new THREE.Box3().setFromObject(root).expandByScalar(6);return root;
 }
 function part(parent,geo,color,x,y,z,sx,sy,sz,rz=0){const m=new THREE.Mesh(geo,material(color));m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.rotation.z=rz;m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
 const cube=(p,c,x,y,z,w,h,d)=>part(p,box,c,x,y,z,w,h,d);

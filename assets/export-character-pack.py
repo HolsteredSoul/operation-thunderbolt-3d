@@ -16,6 +16,7 @@ for obj in bpy.context.scene.objects:
    group['positions'].extend([round(v.x-offset[0]-pivot[0],5),round(v.z-offset[2]-pivot[1],5),round(-(v.y-offset[1])-pivot[2],5)])
    group['normals'].extend([round(n.x,5),round(n.z,5),round(-n.y,5)])
 for role,parts in assets.items():pack['assets'][role]=list(parts.values())
-pack['revision']='distinct-roles-v2'
+pack['revision']='kneeling-sniper-v4'
+pack['materials']={o['tb_mat']:o.data.materials[0]['tb_srgb'] for o in bpy.context.scene.objects if o.type=='MESH' and o.get('tb_asset') in roles and o.data.materials and o.data.materials[0].get('tb_srgb')}
 (base/'village-pack.json').write_text(json.dumps(pack,separators=(',',':')))
 print('Exported role revision:',pack['revision'])

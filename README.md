@@ -27,7 +27,7 @@ Open [the game](http://127.0.0.1:8083). Keep the server terminal open. Stop it w
 | X | Reduce shake |
 | Quality button | Toggle cached scenery shadows / reduced rendering quality |
 
-Losing focus pauses the simulation and clears held inputs. No pointer lock is required. Low cutaway walls, crates, sandbags, and raised rubble block movement and gunfire across their footprints. Ground litter, floorboards, and roads are traversable. The reticle indicates covered or out-of-range targets. Red sniper lines and a screen warning remain visible even when the sniper is outside the viewport. Small edge bearings show distant enemies; S and MG distinguish stationary threats. Persistent combat badges identify RIFLE, OFFICER, SNIPER and MG NEST with distinct symbols and colors. The player has a mint YOU marker and ground ring. Aiming at an enemy also displays its full role name. Allied infantry wear khaki; riflemen wear blue-grey; officers carry pistols under peaked caps and long dark coats; snipers kneel under broad green hoods; MG gunners sit in wide sandbag emplacements.
+Losing focus pauses the simulation and clears held inputs. No pointer lock is required. Low cutaway walls, crates, sandbags, and raised rubble block movement and gunfire across their footprints. Ground litter, floorboards, and roads are traversable. The reticle indicates covered or out-of-range targets. Red sniper lines and a screen warning remain visible even when the sniper is outside the viewport. Small edge bearings show distant enemies; S and MG distinguish stationary threats. Persistent combat badges identify RIFLE, OFFICER, SNIPER and MG NEST with distinct symbols and colors. The player has a mint YOU marker and ground ring. Aiming at an enemy also displays its full role name. Allied infantry wear khaki; riflemen wear blue-grey; officers carry pistols under peaked caps and long dark coats; snipers use a compact kneeling pose with a shouldered scoped rifle and short camouflage cape; MG gunners sit in wide sandbag emplacements.
 
 The seed field accepts up to 32 characters. Replay retains the layout and initial random streams; different inputs can produce different combat outcomes. Fresh Layout immediately starts a new run. High score uses `ot3d_hiscore_v1`, separate from the original game's key.
 
@@ -48,3 +48,16 @@ npm test
 This runs the independent Node simulation checks, including 20 fixed seeds; it takes several minutes. Results go into `output/invariants.json`. The Playwright CLI function snippets under `tests/` document and reproduce browser verification against the running server; they are not Playwright Test specifications. Browser artifacts are saved under `output/playwright/`.
 
 The `window.__OT3D` handle supports controlled verification from browser developer tools. It is not required for normal play.
+
+
+## Approved gameplay refinement
+
+Bullets now have four-pixel contrasting tracers with bright cores; their collision radius, damage and speed are unchanged. Aim selection uses the Blender mesh with a small three-pixel tolerance, and selected moving targets update their combat center before firing.
+
+At 16 total rounds or fewer, follow the AMMO +24 marker to a persistent emergency supply. It replenishes reserve ammunition; reload normally. Further emergency supplies can appear after later depletion. Ordinary ammo drops still grant 16 rounds and now stay for 30 seconds. Enemy strength and wave pressure are unchanged.
+
+Xbox controls: left stick moves, right stick aims, RT fires, X reloads, Menu pauses/resumes. D-pad or left stick navigates menus, A confirms, and B resumes from pause. Click the game once and press a controller button to activate browser input/audio. The pause/menu screen offers saved stick dead-zone and aim-response settings. Disconnecting the active controller pauses the game; reconnecting requires deliberate resume and a released trigger before firing again. Keyboard/mouse remains available.
+
+For physical controller use, open http://127.0.0.1:8083/?v=gameplay4 in Chrome or Edge. The in-app preview has not been confirmed to expose the user's controller; the connection message reports missing or blocked Gamepad API access. A supported standard browser mapping is required.
+
+Additional focused checks: `node tests/gameplay-refinements.mjs`. Browser controller fixtures are simulated standard gamepads; physical controller results are recorded separately in VERIFICATION.md.

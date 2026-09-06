@@ -1,3 +1,5 @@
+import {Controls} from './input.js';
+import {Tracers} from './tracers.js';
 import {THREE,Batcher,buildVillage,soldier,poseSoldier,box,material} from './visuals.js';
 const $=id=>document.getElementById(id),canvas=$('scene'),overlay=$('overlay'),ctx=overlay.getContext('2d');
 let renderer;
@@ -9,12 +11,10 @@ const ambient=new THREE.HemisphereLight('#f2eddb','#4c624e',2.25);scene.add(ambi
 const sun=new THREE.DirectionalLight('#ffe2af',3.2);sun.position.set(550,1200,300);sun.target.position.set(1200,0,900);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-1500,right:1500,top:1500,bottom:-1500,near:10,far:3500});sun.shadow.bias=-.0003;sun.shadow.normalBias=1;sun.shadow.radius=3;scene.add(sun,sun.target);
 const dynamic=new Batcher(scene,true),models=new Map(),effectRoot=new THREE.Group();
 const contactGeo=new THREE.CircleGeometry(1,20),contactMat=new THREE.MeshBasicMaterial({color:'#25352a',transparent:true,opacity:.25,depthWrite:false});
-const ROLE_STYLE={rifleman:{label:'RIFLEMAN',height:53,width:13,color:'#a5cde9',badge:'RIFLE'},officer:{label:'OFFICER',height:51,width:14,color:'#ffd084',badge:'OFFICER'},sniper:{label:'SNIPER',height:47,width:18,color:'#ffa18d',badge:'SNIPER'},nest:{label:'MG NEST',height:46,width:37,color:'#d6bbf5',badge:'MG NEST'}};
-const raycaster=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),-29),aimPoint=new THREE.Vector3(),pointer=new THREE.Vector2();
+const ROLE_STYLE={rifleman:{label:'RIFLEMAN',height:53,width:13,color:'#a5cde9',badge:'RIFLE'},officer:{label:'OFFICER',height:60,width:14,color:'#ffd084',badge:'OFFICER'},sniper:{label:'SNIPER',height:43,width:18,color:'#ffa18d',badge:'SNIPER'},nest:{label:'MG NEST',height:46,width:37,color:'#d6bbf5',badge:'MG NEST'}};
+const modelAimBox=new THREE.Box3(),raycaster=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),-29),aimPoint=new THREE.Vector3(),pointer=new THREE.Vector2();
 let destroyVillage=()=>{},width=0,height=0,last=0,accum=0,uiT=0,toastT=0,frames=[],cpuFrames=[],frameCount=0;
-const bulletGeo=new THREE.BufferGeometry(),bulletPositions=new Float32Array(240*6),bulletColors=new Float32Array(240*6);
-bulletGeo.setAttribute('position',new THREE.BufferAttribute(bulletPositions,3));bulletGeo.setAttribute('color',new THREE.BufferAttribute(bulletColors,3));
-const bulletLines=new THREE.LineSegments(bulletGeo,new THREE.LineBasicMaterial({vertexColors:true}));bulletLines.frustumCulled=false;scene.add(bulletLines);
+const tracers=new Tracers(scene);
 function resize(){width=innerWidth;height=innerHeight;renderer.setSize(width,height);overlay.width=width;overlay.height=height;const view=height<600?600:680;camera.left=-view*width/height/2;camera.right=-camera.left;camera.top=view/2;camera.bottom=-view/2;camera.updateProjectionMatrix();updateCamera(1);updateAim();}
 function updateCamera(dt){
   const menu=G.state==='menu',tx=G.player.x+(menu?-190:0),ty=G.player.y+(menu?190:0),k=1-Math.exp(-9.21*dt);
@@ -26,13 +26,24 @@ function updateCamera(dt){
 function project(x,y,h=29){const p=new THREE.Vector3(x,h,y).project(camera);return{x:(p.x+1)*width/2,y:(1-p.y)*height/2};}
 function updateAim(){
   if(!width)return;
-  pointer.set(G.mouse.x/width*2-1,1-G.mouse.y/height*2);raycaster.setFromCamera(pointer,camera);raycaster.ray.intersectPlane(plane,aimPoint);
-  let target=null,best=Infinity;
-  // Screen silhouette targeting compensates for model height without changing collision/range.
-  for(const e of G.enemies){if(e.dead)continue;const role=ROLE_STYLE[e.type],feet=project(e.x,e.y,5),head=project(e.x,e.y,role.height),cx=(feet.x+head.x)/2,cy=(feet.y+head.y)/2;
-    const rx=role.width*height/680+4,ry=Math.abs(feet.y-head.y)/2+5;
-    const d=((G.mouse.x-cx)/rx)**2+((G.mouse.y-cy)/ry)**2;if(d<=1&&d<best){best=d;target=e;}
+  if(G.input?.source==='pad'){
+    const angle=G.input.sample().aimAngle??G.player.angle,dx=Math.cos(angle),dy=Math.sin(angle),p=G.player;
+    G.mouse.wx=p.x+dx*330;G.mouse.wy=p.y+dy*330;
+    const reticle=project(G.mouse.wx,G.mouse.wy,29);G.mouse.x=reticle.x;G.mouse.y=reticle.y;
+    G.aimTarget=G.enemies.filter(e=>!e.dead&&segmentCircle(p.x,p.y,p.x+dx*547,p.y+dy*547,e,e.r)!==null).sort((a,b)=>U.dist(p.x,p.y,a.x,a.y)-U.dist(p.x,p.y,b.x,b.y))[0]||null;return;
   }
+  const cast=(x,y)=>{pointer.set(x/width*2-1,1-y/height*2);raycaster.setFromCamera(pointer,camera);};
+  cast(G.mouse.x,G.mouse.y);raycaster.ray.intersectPlane(plane,aimPoint);
+  const candidates=[];
+  for(const e of G.enemies){if(e.dead)continue;const model=models.get(e);if(!model?.userData.aimBounds)continue;
+    model.position.set(e.x,0,e.y);model.rotation.y=Math.PI/2-e.angle;model.updateMatrixWorld(true);
+    modelAimBox.copy(model.userData.aimBounds).applyMatrix4(model.matrixWorld);
+    if(raycaster.ray.intersectsBox(modelAimBox))candidates.push({e,model});
+  }
+  const hit=()=>{let result=null,best=Infinity;for(const {e,model}of candidates){const h=raycaster.intersectObject(model,true)[0];if(h&&h.distance<best){best=h.distance;result=e;}}return result;};
+  let target=hit();
+  // A three-pixel margin catches small near misses without enlarging combat hitboxes.
+  if(!target&&candidates.length){const nearby=[];for(const [x,y]of[[3,0],[-3,0],[0,3],[0,-3]]){cast(G.mouse.x+x,G.mouse.y+y);const e=hit();if(e)nearby.push(e);}target=nearby.includes(G.aimTarget)?G.aimTarget:nearby[0]||null;}
   G.aimTarget=target;G.mouse.wx=target?target.x:aimPoint.x;G.mouse.wy=target?target.y:aimPoint.z;
 }
 function rebuild(){destroyVillage();destroyVillage=buildVillage(G,scene);models.clear();dynamic.begin();dynamic.finish();G.mouse.x=width*.6;G.mouse.y=height*.48;updateCamera(1);updateAim();renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.render(scene,camera);}
@@ -44,11 +55,10 @@ function renderModels(){
   for(const e of models.keys())if(!active.has(e))models.delete(e);
   effectRoot.clear();
   for(const e of entities){const m=new THREE.Mesh(contactGeo,contactMat);m.position.set(e.x,2,e.y);m.rotation.x=-Math.PI/2;m.scale.set(e.type==='nest'?31:13,e.type==='nest'?25:11,1);effectRoot.add(m);}
-  for(const pk of G.pickups){if(pk.t>11&&Math.floor(pk.t*8)%2===0)continue;const col=pk.isUpgrade?({dmg:'#eb8556',fireRate:'#edce6c',mag:'#7ac0d5',maxHp:'#94c997'})[pk.type]:pk.type==='health'?'#e3d6b7':'#a4ac72';const m=new THREE.Mesh(box,material(col));m.position.set(pk.x,12+Math.sin(pk.t*3)*3,pk.y);m.scale.set(15,pk.isUpgrade?15:10,15);if(pk.isUpgrade)m.rotation.y=pk.t;m.rotation.z=pk.isUpgrade?Math.PI/4:0;effectRoot.add(m);}
+  for(const pk of G.pickups){if(pk.t>G.ui.pickupLife(pk)-3&&Math.floor(pk.t*8)%2===0)continue;const col=pk.isUpgrade?({dmg:'#eb8556',fireRate:'#edce6c',mag:'#7ac0d5',maxHp:'#94c997'})[pk.type]:pk.type==='health'?'#e3d6b7':'#a4ac72';const m=new THREE.Mesh(box,material(col));m.position.set(pk.x,12+Math.sin(pk.t*3)*3,pk.y);m.scale.set(pk.emergency?23:15,pk.isUpgrade?15:10,pk.emergency?23:15);if(pk.isUpgrade)m.rotation.y=pk.t;m.rotation.z=pk.isUpgrade?Math.PI/4:0;effectRoot.add(m);}
   for(const p of G.effects){const m=new THREE.Mesh(box,material(p.color));const age=.4-p.life;m.position.set(p.x+(p.vx||0)*age,p.h+(p.vh||0)*age,p.y+(p.vy||0)*age);m.scale.setScalar(p.size*Math.min(1,p.life*15));effectRoot.add(m);}
   dynamic.add(effectRoot);dynamic.finish();
-  let n=0;for(const b of G.bullets){const a=Math.atan2(b.vy,b.vx),c=new THREE.Color(b.color);bulletPositions.set([b.x-Math.cos(a)*20,29,b.y-Math.sin(a)*20,b.x,29,b.y],n*6);bulletColors.set([c.r,c.g,c.b,c.r,c.g,c.b],n*6);n++;}
-  bulletGeo.setDrawRange(0,n*2);bulletGeo.attributes.position.needsUpdate=true;bulletGeo.attributes.color.needsUpdate=true;
+  tracers.update(G.bullets,camera,height);
 }
 // Persistent recognition badges use words AND distinct shapes, independent of uniform color.
 // They are canvas-only, so they never intercept aiming or mouse input.
@@ -91,7 +101,17 @@ function drawOverlay(){
     if(e.telegraphT>0){const a=project(e.x,e.y,29),b=project(e.laserX,e.laserY,29);ctx.strokeStyle='#ff6655';ctx.lineWidth=1.5+(1-e.telegraphT/1.4);ctx.setLineDash([8,5]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(b.x,b.y,10,0,TAU);ctx.stroke();ctx.fillStyle='#ffb49c';ctx.font='bold 11px Consolas';ctx.textAlign='center';ctx.fillText('SNIPER · BREAK SIGHT',width/2,103);}
   }
   drawRoleBadges(badges);
-  for(const pk of G.pickups){const s=project(pk.x,pk.y,23);ctx.font='bold 11px Consolas';ctx.textAlign='center';ctx.fillStyle='#fff5dc';ctx.fillText(({health:'+',ammo:'≡',dmg:'D',fireRate:'F',mag:'M',maxHp:'H'})[pk.type],s.x,s.y);}
+  for(const pk of G.pickups){
+    if(pk.t>G.ui.pickupLife(pk)-3&&Math.floor(pk.t*8)%2===0)continue;
+    const s=project(pk.x,pk.y,25);ctx.font='bold 11px Consolas';ctx.textAlign='center';ctx.fillStyle='#fff5dc';
+    if(pk.type==='ammo'){
+      const off=s.x<55||s.x>width-55||s.y<110||s.y>height-145;
+      if(off&&!pk.emergency)continue;
+      const x=U.clamp(s.x,55,width-55),y=U.clamp(s.y,110,height-145),text=pk.emergency?'AMMO +24':'AMMO +16';
+      ctx.fillStyle='#182522ee';ctx.fillRect(x-42,y-22,84,21);ctx.fillStyle='#ffe39c';ctx.fillText(text,x,y-7);
+      if(pk.emergency){ctx.strokeStyle='#ffe39c';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y+8,10,0,TAU);ctx.stroke();if(off){ctx.save();ctx.translate(x,y+8);ctx.rotate(Math.atan2(s.y-y,s.x-x));ctx.beginPath();ctx.moveTo(7,0);ctx.lineTo(-4,-4);ctx.lineTo(-4,4);ctx.closePath();ctx.fill();ctx.restore();}else{ctx.beginPath();ctx.moveTo(x,y-1);ctx.lineTo(x,y+17);ctx.moveTo(x-8,y+8);ctx.lineTo(x+8,y+8);ctx.stroke();}}
+    }else ctx.fillText(({health:'+',dmg:'D',fireRate:'F',mag:'M',maxHp:'H'})[pk.type],s.x,s.y);
+  }
   const vis=G.ui.getVisuals();for(const f of vis.floats){const s=project(f.x,f.y,58);ctx.globalAlpha=Math.max(0,1-f.t/f.life);ctx.fillStyle=f.color;ctx.font='bold 12px Consolas';ctx.textAlign='center';ctx.fillText(f.text,s.x,s.y);}ctx.globalAlpha=1;
   if(vis.flashT>0){ctx.fillStyle=`rgba(156,44,26,${vis.flashT*.5})`;ctx.fillRect(0,0,width,height);}
   if(G.state==='playing'){
@@ -110,10 +130,11 @@ function drawOverlay(){
 }
 function setText(id,text){if($(id).textContent!==text)$(id).textContent=text;}
 function updateHUD(){
+  updateInputPrompts();
   const p=G.player,inter=G.nextWaveIn>0,comp=OT.enemies.previewNextWave(G);
   setText('seed-label','SEED / '+G.seed);setText('health-value',`${Math.ceil(p.hp)} / ${p.maxHp}`);$('health-fill').style.width=100*p.hp/p.maxHp+'%';$('health-fill').style.background=p.hp<30?'#d58b6a':'#adbf91';
   setText('health-state',p.hp<30?'CRITICAL · FIND MEDICAL SUPPLIES':p.hp<70?'WOUNDED':'FIT FOR DUTY');
-  setText('ammo',String(p.ammo).padStart(2,'0'));setText('reserve','/ '+p.reserve);setText('reload-label',p.reloadT>0?'RELOADING':p.ammo===0&&p.reserve===0?'NO AMMUNITION':'R · RELOAD');
+  setText('ammo',String(p.ammo).padStart(2,'0'));setText('reserve','/ '+p.reserve);setText('reload-label',p.reloadT>0?'RELOADING':p.ammo===0&&p.reserve===0?'FOLLOW AMMO MARKER':(G.input?.source==='pad'?'X - RELOAD':'R - RELOAD'));
   const rounds=Array.from({length:p.magSize},(_,i)=>`<i class="${i<p.ammo?'':'empty'}"></i>`).join('');if($('rounds').innerHTML!==rounds)$('rounds').innerHTML=rounds;
   setText('wave-status',inter?'REINFORCEMENTS IN '+Math.ceil(G.nextWaveIn)+'s':'HOLD YOUR GROUND');setText('wave-number',String(G.wave||1).padStart(2,'0'));
   $('wave-info').innerHTML=(inter?'NEXT WAVE':'WAVE')+'<br><b>'+ (inter?Object.values(comp).reduce((a,b)=>a+b,0):G.enemiesLeft)+' HOSTILES</b>';
@@ -127,7 +148,7 @@ function showState(){
   if(G.state==='menu'){$('modal-title').innerHTML='A village.<br>A rifle.<br><em>Hold the line.</em>';$('modal-kicker').textContent='FIELD ORDERS / 1944';$('start').innerHTML='DEPLOY <span>→</span>';}
   if(G.state==='paused'){$('modal-title').innerHTML='Catch your<br><em>breath.</em>';$('modal-kicker').textContent='BATTLE PAUSED';$('modal-copy').textContent='The battlefield is on hold. Resume when you’re ready. Fresh layout starts a new run.';$('start').innerHTML='RESUME <span>→</span>';}
   if(G.state==='gameover'){$('modal-title').innerHTML='Your watch<br><em>has ended.</em>';$('modal-kicker').textContent=G.newRecord?'NEW FIELD RECORD':'AFTER-ACTION REPORT';$('modal-copy').textContent='The village remembers. Replay this battlefield, or deploy to a fresh layout.';$('results').textContent=`SCORE ${G.score.toLocaleString()} · WAVE ${G.wave} · ${G.kills} KILLS\n${Math.floor(G.time/60)}m ${Math.floor(G.time%60)}s survived · ${G.stats.shots?Math.round(G.stats.hits/G.stats.shots*100):0}% hits`;$('results').style.whiteSpace='pre-line';$('start').innerHTML='REPLAY SEED <span>→</span>';}
-  $('seed').value=G.seed;updateHUD();
+  $('seed').value=G.seed;updateHUD();if(G.input?.source==='pad'&&G.state!=='playing')$('start').focus();
 }
 function toast(s){$('toast').style.display='block';$('toast').textContent=s;toastT=2;}
 function toggleSound(){G.muted=G.audio.toggleMute();setText('sound',G.muted?'SOUND OFF':'SOUND ON');}
@@ -136,6 +157,7 @@ function pause(){if(G.state==='playing')setState('paused');else if(G.state==='pa
 $('start').onclick=()=>G.state==='paused'?pause():startRun($('seed').value);
 $('fresh').onclick=()=>startRun(freshSeed());$('pause').onclick=pause;$('sound').onclick=()=>{G.audio.unlock();toggleSound();};$('quality').onclick=toggleQuality;
 window.addEventListener('keydown',e=>{
+  G.input.useMouse();
   if(e.target.tagName==='INPUT'){if(e.code==='Enter')startRun($('seed').value);return;}
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.repeat)return;G.keys[e.code]=true;G.audio.unlock();
   if(e.code==='KeyR'&&G.state==='playing')OT.player.startReload(G,G.player);
@@ -144,16 +166,38 @@ window.addEventListener('keydown',e=>{
   if(e.code==='Enter'||e.code==='Space'){if(G.state==='menu'||G.state==='gameover')startRun($('seed').value);else if(G.state==='paused')pause();}
 });
 window.addEventListener('keyup',e=>{G.keys[e.code]=false;});
-function loseFocus(){if(G.state==='playing')setState('paused');G.keys={};G.mouse.down=false;}
-window.addEventListener('blur',loseFocus);document.addEventListener('visibilitychange',()=>{if(document.hidden)loseFocus();});window.addEventListener('game-state',showState);
-window.addEventListener('mousemove',e=>{G.mouse.x=e.clientX;G.mouse.y=e.clientY;updateAim();});canvas.addEventListener('mousedown',e=>{if(e.button===0&&G.state==='playing'){G.audio.unlock();G.mouse.down=true;}});window.addEventListener('mouseup',()=>G.mouse.down=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('resize',resize);
+function loseFocus(){if(G.state==='playing')setState('paused');G.keys={};G.mouse.down=false;G.input.suspended=true;G.input.reset();}
+window.addEventListener('focus',()=>G.input.suspended=false);
+window.addEventListener('blur',loseFocus);document.addEventListener('visibilitychange',()=>{if(document.hidden)loseFocus();});window.addEventListener('game-state',()=>{G.input.reset();showState();});
+let lastMouseX=NaN,lastMouseY=NaN;
+window.addEventListener('mousemove',e=>{if(e.clientX!==lastMouseX||e.clientY!==lastMouseY){lastMouseX=e.clientX;lastMouseY=e.clientY;G.input.useMouse();G.mouse.x=e.clientX;G.mouse.y=e.clientY;updateAim();}});canvas.addEventListener('mousedown',e=>{if(e.button===0&&G.state==='playing'){G.input.useMouse();G.audio.unlock();G.mouse.down=true;}});window.addEventListener('mouseup',()=>G.mouse.down=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('resize',resize);
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();loseFocus();$('fatal').hidden=false;$('fatal').textContent='The graphics context was lost. Reload the page to restore the battlefield.';});
+function menuButtons(){return [...document.querySelectorAll('#modal button,header button')].filter(b=>b.offsetParent!==null&&!b.disabled);}
+G.input=new Controls(G,{
+  unlock:()=>G.audio?.unlock(),pause,back:()=>{if(G.state==='paused')pause();},reload:()=>OT.player.startReload(G,G.player),
+  disconnect:()=>{if(G.state==='playing')setState('paused');G.keys={};G.mouse.down=false;toast('CONTROLLER DISCONNECTED - PAUSED');},
+  menu:direction=>{const buttons=menuButtons(),i=buttons.indexOf(document.activeElement);buttons[(i+direction+buttons.length)%buttons.length]?.focus();},
+  confirm:()=>{const buttons=menuButtons();(buttons.includes(document.activeElement)?document.activeElement:$('start')).click();}
+});
+try{const saved=JSON.parse(localStorage.getItem('ot3d_controller')||'{}');if([.1,.15,.2,.25].includes(saved.dead))G.input.dead=saved.dead;if([8,14,24].includes(saved.response))G.input.response=saved.response;}catch{}
+function saveController(){try{localStorage.setItem('ot3d_controller',JSON.stringify({dead:G.input.dead,response:G.input.response}));}catch{}updateInputPrompts();}
+$('pad-deadzone').onclick=()=>{const a=[.1,.15,.2,.25];G.input.dead=a[(a.indexOf(G.input.dead)+1)%a.length];saveController();};
+$('pad-response').onclick=()=>{const a=[8,14,24];G.input.response=a[(a.indexOf(G.input.response)+1)%a.length];saveController();};
+function updateInputPrompts(){
+  if(!G.input)return;const pad=G.input.source==='pad';
+  setText('input-hint',pad?'LS MOVE / RS AIM / RT FIRE / X RELOAD':'WASD / ARROWS MOVE / MOUSE AIM & FIRE');
+  setText('move-hint',pad?'Left stick - screen relative':'WASD or arrows - screen relative');
+  setText('engage-hint',pad?'Right stick aim - RT fire':'Aim at soldiers - hold mouse to fire');
+  setText('survive-hint',pad?'X reload - follow AMMO markers':'R reload - follow AMMO markers');
+  setText('pad-status',G.input.status);setText('pad-deadzone','STICK DEAD ZONE '+Math.round(G.input.dead*100)+'%');
+  setText('pad-response','AIM RESPONSE '+({8:'SMOOTH',14:'NORMAL',24:'QUICK'})[G.input.response]);
+}
 initGame();resize();rebuild();showState();
 function frame(t){
   requestAnimationFrame(frame);const begin=performance.now(),raw=last?(t-last)/1000:1/60;last=t;const dt=Math.min(.05,raw);G.stateT+=dt;
-  updateCamera(dt);updateAim();
+  G.input.poll(dt);updateCamera(dt);updateAim();
   if(G.state==='playing'){accum+=dt;let n=0;while(accum>=1/120&&n++<6){step(1/120);accum-=1/120;}}else accum=0;
-  renderModels();renderer.render(scene,camera);drawOverlay();
+  renderModels();updateAim();renderer.render(scene,camera);drawOverlay();
   uiT+=dt;if(uiT>.1){updateHUD();uiT=0;}if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').style.display='none';}
   if(raw<.2&&G.state==='playing'){frames.push(raw*1000);cpuFrames.push(performance.now()-begin);if(frames.length>1200){frames.shift();cpuFrames.shift();}}frameCount++;
 }

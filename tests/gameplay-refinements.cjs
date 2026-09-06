@@ -1,0 +1,42 @@
+async(page)=>{
+  await page.reload();await page.waitForFunction(()=>window.__OT3D);await page.setViewportSize({width:1920,height:1080});
+  const hardware=await page.evaluate(()=>Array.from(navigator.getGamepads?.()||[]).filter(Boolean).map(p=>({id:p.id,mapping:p.mapping,connected:p.connected})));
+  const checks=[];
+  await page.evaluate(()=>{const a=__OT3D;a.startRun('QA-03');a.G.nextWaveIn=999;a.G.player.ammo=0;a.G.player.reserve=0;window.dispatchEvent(new Event('focus'));});
+  await page.waitForFunction(()=>__OT3D.G.pickups.some(p=>p.emergency));
+  await page.screenshot({path:'output/playwright/emergency-ammo.png'});
+  const target=await page.evaluate(()=>{const p=__OT3D.G.player,pk=__OT3D.G.pickups.find(p=>p.emergency);return{x:pk.x-p.x,y:pk.y-p.y};});
+  // This seed places the pickup on the open central road; walk using browser keys.
+  const sx=(target.x-target.y)*Math.SQRT1_2,sy=(target.x+target.y)*Math.SQRT1_2;
+  const key=Math.abs(sx)>Math.abs(sy)?(sx>0?'d':'a'):(sy>0?'s':'w');
+  await page.keyboard.down(key);await page.waitForTimeout(600);await page.keyboard.up(key);
+  checks.push({name:'empty player collects recovery through keyboard movement',pass:await page.evaluate(()=>__OT3D.G.player.reserve===24)});
+  await page.keyboard.press('r');await page.waitForTimeout(1200);checks.push({name:'recovery reload',pass:await page.evaluate(()=>__OT3D.G.player.ammo===8&&__OT3D.G.player.reserve===16)});
+  await page.mouse.move(1200,500);await page.mouse.down();await page.waitForTimeout(100);await page.screenshot({path:'output/playwright/visible-tracers.png'});await page.mouse.up();
+  checks.push({name:'shots after recovery',pass:await page.evaluate(()=>__OT3D.G.stats.shots>0)});
+  await page.reload();await page.waitForFunction(()=>window.__OT3D);
+  await page.evaluate(()=>{window.qaPad={index:0,id:'Automated standard mapping fixture',mapping:'standard',connected:true,axes:[0,0,0,0],buttons:Array.from({length:17},()=>({pressed:false,value:0}))};window.qaPads=[qaPad];Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>qaPads});window.dispatchEvent(new Event('focus'));});
+  const button=async(i,on)=>{await page.evaluate(({i,on})=>qaPad.buttons[i]={pressed:on,value:Number(on)},{i,on});await page.waitForTimeout(70);};
+  await button(0,true);await button(0,false);await page.waitForFunction(()=>__OT3D.G.state==='playing');
+  await page.evaluate(()=>{__OT3D.G.nextWaveIn=999;__OT3D.G.player.invulnT=999;});
+  checks.push({name:'controller deploy and prompts',pass:await page.evaluate(()=>__OT3D.G.input.source==='pad'&&document.getElementById('reload-label').textContent.startsWith('X'))});
+  const before=await page.evaluate(()=>({x:__OT3D.G.player.x,y:__OT3D.G.player.y}));
+  await page.evaluate(()=>qaPad.axes=[.575,0,0,1]);await page.waitForTimeout(500);
+  const after=await page.evaluate(()=>({x:__OT3D.G.player.x,y:__OT3D.G.player.y,angle:__OT3D.G.player.angle}));
+  checks.push({name:'half-stick analog motion and downward screen aim',pass:after.x>before.x&&after.y<before.y&&Math.abs(after.angle-Math.PI/4)<.08,data:{distance:Math.hypot(after.x-before.x,after.y-before.y),angle:after.angle}});
+  await page.evaluate(()=>qaPad.axes=[0,0,0,0]);await button(7,true);await page.waitForTimeout(360);await button(7,false);
+  checks.push({name:'RT firing',pass:await page.evaluate(()=>__OT3D.G.stats.shots>=2)});
+  await button(2,true);await page.waitForTimeout(1200);await button(2,false);checks.push({name:'controller X reload',pass:await page.evaluate(()=>__OT3D.G.player.ammo===8)});
+  await button(7,true);await button(9,true);await button(9,false);const pausedShots=await page.evaluate(()=>__OT3D.G.stats.shots);await button(9,true);await button(9,false);await page.waitForTimeout(200);
+  checks.push({name:'held RT cannot fire across pause/resume',pass:await page.evaluate(n=>__OT3D.G.stats.shots===n,pausedShots)});await button(7,false);
+  await page.evaluate(()=>qaPads=[]);await page.waitForFunction(()=>__OT3D.G.state==='paused');await page.evaluate(()=>qaPads=[qaPad]);await page.waitForTimeout(150);
+  checks.push({name:'disconnect pauses; reconnect does not resume',pass:await page.evaluate(()=>__OT3D.G.state==='paused')});
+  await button(13,true);await button(13,false);checks.push({name:'D-pad menu navigation',pass:await page.evaluate(()=>document.activeElement.id==='fresh')});
+  await page.evaluate(()=>qaPad.axes=[0,.8,0,0]);await page.waitForTimeout(120);checks.push({name:'left-stick menu navigation',pass:await page.evaluate(()=>document.activeElement.id==='pad-deadzone')});await page.evaluate(()=>qaPad.axes=[0,0,0,0]);
+  await button(1,true);await button(1,false);checks.push({name:'B resumes pause',pass:await page.evaluate(()=>__OT3D.G.state==='playing')});
+  await page.mouse.move(1100,460);await page.waitForTimeout(100);checks.push({name:'mouse resumes control',pass:await page.evaluate(()=>__OT3D.G.input.source==='mouse')});
+  await page.evaluate(()=>qaPad.axes=[.03,.04,.05,.02]);await page.waitForTimeout(100);checks.push({name:'stick drift does not steal mouse',pass:await page.evaluate(()=>__OT3D.G.input.source==='mouse')});
+  await page.keyboard.press('p');await page.screenshot({path:'output/playwright/controller-menu.png'});
+  await page.reload();await page.waitForFunction(()=>window.__OT3D);
+  return {hardware,checks};
+}

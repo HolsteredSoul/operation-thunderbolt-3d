@@ -6,3 +6,5 @@ body{user-select:none}input{user-select:text}
 
 #wave-panel,#score-panel{background:#182522b8;padding:12px 16px;pointer-events:none}#wave-panel{max-width:245px}#score-panel{border-right:2px solid var(--gold)}footer{pointer-events:none}.health-block .eyebrow{font-size:10px}.health-block small{font-size:9px}
 
+
+.controller-settings{margin:14px 0;font:10px Consolas;color:#bcbca1}.controller-settings div{display:flex;gap:8px;margin:7px 0}.controller-settings button{font-size:10px;padding:7px 9px}button:focus-visible{outline:3px solid #ffe39c;outline-offset:3px}.keyboard-hint{max-width:205px;line-height:1.7}.briefing{max-height:94vh;overflow-y:auto}

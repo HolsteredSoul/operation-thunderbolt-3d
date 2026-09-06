@@ -25,6 +25,8 @@ OT.ui = (() => {
 
   // ---- pickup tuning ----
   const PICKUP_LIFE = 14;
+  let recoveryRandom=seeded('initial:ammo');
+  const pickupLife=pk=>pk.emergency?Infinity:(pk.lifetime??(pk.type==='ammo'?30:PICKUP_LIFE));
   const MAGNET_RANGE = 90;
   const MAGNET_SPEED = 140;
   const BLINK_WINDOW = 3;          // last N seconds before expiry
@@ -60,6 +62,8 @@ OT.ui = (() => {
     floats = [];
     flashT = 0;
     hintT = 8;
+    recoveryRandom=seeded(G.seed+':ammo-recovery');
+    Object.assign(G.stats,{ammoGenerated:0,ammoCollected:0,ammoExpired:0,emergencyCollections:0,emptySeconds:0,resupplyDamage:0});
   }
 
   // ---- public API ----
@@ -130,7 +134,7 @@ OT.ui = (() => {
     for (let i = list.length - 1; i >= 0; i--) {
       const pk = list[i];
       pk.t += dt;
-      if (pk.t >= PICKUP_LIFE) { list.splice(i, 1); continue; }
+      if (pk.t >= pickupLife(pk)) { if(pk.type==='ammo')G.stats.ammoExpired=(G.stats.ammoExpired||0)+(pk.amount??16);list.splice(i, 1); continue; }
       if (!p) continue;
 
       const d = U.dist(pk.x, pk.y, p.x, p.y);
@@ -152,8 +156,10 @@ OT.ui = (() => {
           }
           G.audio.play('pickup');
         } else { // ammo
-          p.reserve = Math.min(p.maxReserve, p.reserve + 16);
-          floatFn(pk.x, pk.y, '+16 AMMO', '#ffd76a');
+          const amount=pk.amount??16,taken=Math.min(amount,p.maxReserve-p.reserve);
+          p.reserve += taken;G.stats.ammoCollected=(G.stats.ammoCollected||0)+taken;
+          if(pk.emergency)G.stats.emergencyCollections=(G.stats.emergencyCollections||0)+1;
+          floatFn(pk.x, pk.y, '+'+taken+' AMMO', '#ffd76a');
           G.audio.play('pickup');
         }
         list.splice(i, 1);
@@ -167,9 +173,16 @@ OT.ui = (() => {
         pk.y += Math.sin(ang) * MAGNET_SPEED * dt;
       }
     }
+    if(p&&p.hp>0){
+      if(p.ammo+p.reserve===0)G.stats.emptySeconds=(G.stats.emptySeconds||0)+dt;
+      if(p.ammo+p.reserve<=16&&!list.some(pk=>pk.emergency)){
+        const spot=emergencyAmmoSpot(G,recoveryRandom);
+        if(spot){list.push({...spot,type:'ammo',amount:24,emergency:true,t:0});G.stats.ammoGenerated=(G.stats.ammoGenerated||0)+24;bannerFn('AMMO AVAILABLE - FOLLOW THE MARKER',3);}
+      }
+    }
   }
 
   // ---------------------------------------------------------------
-  return { init, reset, update, banner: bannerFn, float: floatFn, flash: flashFn, applyUpgrade, getVisuals: () => ({banner, floats, flashT, hintT}) };
+  return { init, reset, update, pickupLife, banner: bannerFn, float: floatFn, flash: flashFn, applyUpgrade, getVisuals: () => ({banner, floats, flashT, hintT}) };
 })();
 

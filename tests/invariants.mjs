@@ -3,7 +3,7 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const noop=()=>{}, sandbox={console,Event:class{},window:{dispatchEvent:noop},localStorage:{getItem:()=>null,setItem:noop},crypto:globalThis.crypto};
 vm.createContext(sandbox);
-for(const file of ['layout','core','player','enemies','supplies'])vm.runInContext(fs.readFileSync(`src/${file}.js`,'utf8'),sandbox);
+for(const file of ['layout','ammo-placement','core','player','enemies','supplies'])vm.runInContext(fs.readFileSync(`src/${file}.js`,'utf8'),sandbox);
 const run=code=>vm.runInContext("{"+code+"}",sandbox),results=[];
 function test(name,fn){if(process.env.COMBAT_ONLY&&name.startsWith('20 fixed')){console.log('SKIP fixed-seed suite (combat-only run)');return;}fn();results.push({name,pass:true});console.log('PASS',name);}
 run(`G.audio={play(){},unlock(){}};G.fx={impact(){},blood(){},corpse(){},burst(){},explode(){},muzzle(){}};OT.ui.init(G);OT.audiofx={reset(){}};`);

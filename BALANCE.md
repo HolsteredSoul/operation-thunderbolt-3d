@@ -1,6 +1,6 @@
 # Retained combat and deliberate adaptation differences
 
-Reference: the current `template.html` and `modules/*.js` in `C:\DEV\Thunderbolt_WWII`, inspected and briefly played before implementation. Distances retain the original units; the arena remains 2400 × 1800. No damage, health, speed, ammunition, score, drop-rate, upgrade, composition, or pacing retuning was applied.
+Reference: the current `template.html` and `modules/*.js` in `C:\DEV\Thunderbolt_WWII`, inspected and briefly played before implementation. Distances retain the original units; the arena remains 2400 × 1800. Damage, health, speed, starting ammunition, score, random drop rates, upgrades, composition and pacing retain their original values. The user approved the ammunition recovery changes below on 6 September 2026.
 
 ## Player
 
@@ -29,11 +29,13 @@ A death first rolls `< .05` for an upgrade. Only if that fails, a **new independ
 
 Four stacks per upgrade: damage +6 (58 maximum); interval −.025 s (.06 minimum); magazine +2 (16 maximum); maximum HP +20 and healing +20 (180 maximum). An already-capped type awards 200 score. Magazine upgrades do not refill ammunition.
 
-Medical supplies restore 35 HP, or give eight reserve rounds when already at full health. Ammo supplies give 16 reserve rounds, capped at 160. Supplies expire at 14 s, blink in their last three seconds, and magnetize inside 90 units at 140 units/s with clear sight.
+Medical supplies restore 35 HP, or give eight reserve rounds when already at full health. Ammo supplies give 16 reserve rounds, capped at 160. Ordinary ammo expires after 30 s; medical supplies and upgrades expire after 14 s. Timed pickups blink in their last three seconds and magnetize inside 90 units at 140 units/s with clear sight.
+
+At 16 or fewer total rounds (loaded plus reserve), one guaranteed emergency ammo pickup appears. It grants 24 reserve rounds, remains until collected and can recur after later depletion. Placement prefers a 100–180-unit walk-grid route and avoids occupied or exposed locations where possible, with a nearby reachable fallback. It has no kill requirement, cost or recovery cooldown. The player still collects and reloads normally; reserve remains capped at 160. Placement has its own seeded RNG and does not consume combat random numbers. This deliberately reduces ammo starvation without increasing enemy pressure. See AMMO-BALANCE-REVIEW.md for the budget analysis.
 
 ## Adaptation differences
 
-- **Fixed orthographic view and input:** camera azimuth 45°, elevation 35°, smooth follow; screen-relative normalized movement. The aim plane is at rifle height, with visible soldier silhouettes mapped to their combat centers. This avoids the height-dependent targeting error of aiming at the ground under a 3D model. Damage and collisions remain on one level.
+- **Fixed orthographic view and input:** camera azimuth 45°, elevation 35°, smooth follow; screen-relative keyboard movement and analog controller movement capped at the same speed. The aim plane is at rifle height, with visible soldier silhouettes mapped to their combat centers. This avoids the height-dependent targeting error of aiming at the ground under a 3D model. Damage and collisions remain on one level.
 - **Cover:** low cutaway masonry keeps soldiers' heads visible. Every raised cover footprint blocks both movement and projectiles regardless of decorative height. Swept projectile tests replace source point sampling, preventing fast rounds from skipping thin walls. The player's muzzle segment cannot shoot through a wall. Pickup collection, as well as magnet movement, requires clear sight.
 - **Navigation:** an 18-unit-clearance grid supplies connected routes around ruins when sight is blocked, replacing unreliable blind detours in that situation. Enemy speed and firing parameters are unchanged. This can increase effective enemy pressure by reducing time stuck at walls.
 - **Procedural bounds:** eight separated building parcels with opposing 96-unit doors, 26 attempted cover placements, protected central roads and a 160-unit start radius. Placement validation requires complete grid connectivity, accessible interiors, 2–10% cover footprint density, open crossroads, and more than 160 accessible perimeter cells. Eight candidates maximum, then a validated known-good layout. A 30-unit perimeter margin keeps actors clear of scenery beyond the arena.
