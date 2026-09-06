@@ -1,8 +1,10 @@
-# First-version verification — 6 September 2026
+# Verification — 6 September 2026
 
 ## Result
 
 The local survival mode is playable with Blender-authored assets, all four enemy roles, all four capped upgrades, seeded village layouts, restart, sound controls and persistent high score. The original project was read as a reference and left in place. There are no known failures blocking this defined mode.
+
+The sections below record checks at each implementation stage; later results supersede earlier behavior and measurements. Raw `output/` artifacts are local and gitignored; the checked-in scripts reproduce the documented scenarios. Physical Xbox operation is confirmed in Chrome, while the in-app preview remains unverified.
 
 ## Automated simulation checks
 
@@ -49,7 +51,7 @@ This clears the average 60 FPS target under the stated conditions. It is **not**
 
 - Short playthroughs and layout checks do not establish equal seed difficulty or identical difficulty to the original. Navigation and bounded spawn differences are explained in BALANCE.md.
 - The view deliberately uses low cutaway ruins and one combat plane. There are no elevation mechanics or roofed interiors.
-- Desktop keyboard/mouse and WebGL 2 are required. Mobile controls and additional game modes are outside this version.
+- A desktop browser with WebGL 2 is required. Keyboard/mouse and a standard Xbox controller are supported. Mobile controls and additional game modes are outside this version.
 - Sound recipes and controls were exercised; a human listening pass remains useful.
 
 This completes the requested first version. Further balance or visual work waits for the user's review.
@@ -95,20 +97,35 @@ The 34-enemy 1080p headed Chrome / Iris Xe workload measured 63.4 FPS mean High 
 
 Evidence: output/approved-gameplay-invariants.txt, output/approved-combat-final.txt, output/gameplay-refinements-unit.txt, output/approved-browser-checks.txt, output/approved-refinements-browser-final.txt, output/approved-ammo-playthroughs.txt, output/approved-gameplay-performance.txt, output/kneeling-sniper-check.txt and output/playwright/.
 
-### Physical Xbox test is unresolved
-
-The user reported no working input in either the in-app preview or the dedicated Chrome window. Actual Chrome inspection (no gamepad fixture) showed getGamepads available, a focused secure localhost page, and an empty controller list. Windows PnP lists an Xbox Wireless Controller and Bluetooth XINPUT-compatible device with OK status, but a native XInputGetState probe returned 1167 for all four slots. This indicates no device exposed through that backend at the time of probing; it does not establish a specific hardware, firmware or driver cause. A Windows Gaming Input probe could not load the WinRT types and supplied no additional evidence. The in-app browser inspection tool failed because of the environment sandbox helper, so its API support has not been established.
-
-The user has been asked to test a USB data connection to distinguish Bluetooth detection from game mapping. Do not describe physical controller support as verified or the overall controller issue as fixed. Synthetic tests prove application behavior with standard input data only. Research and next diagnostic steps are in CONTROLLER-NOTES.md.
-
-
 ## Physical Xbox issue resolved — subsequent live check
 
-A native Bluetooth probe distinguished a remembered pairing from live connection: initially disconnected, then connected after the controller was powered on. XInput then returned a connected slot with live stick values. After the Chrome page was clicked and controller input supplied, the user confirmed that it works. Chrome exposed the actual device as STANDARD GAMEPAD Vendor 045e / Product 02e0 with mapping=standard and connected=true. See output/physical-controller-working.txt and CONTROLLER-NOTES.md.
+A native Bluetooth probe distinguished a remembered pairing from live connection: initially disconnected, then connected after the controller was powered on. XInput then returned a connected slot with live stick values. After the Chrome page was clicked and controller input supplied, the user confirmed that it works. Chrome exposed the actual device as STANDARD GAMEPAD Vendor 045e / Product 02e0 with mapping=standard and connected=true. The local record is output/physical-controller-working.txt.
 
-Physical Bluetooth operation in Chrome is now user-verified. In-app browser support and subjective long-session controller feel remain separately unverified. No driver, firmware, pairing or browser flag changes were needed. Clearer power-on/activation and sleep/disconnect messages were added to prevent confusing an idle controller with an application failure. This section supersedes the earlier unresolved hardware status.
+Physical Bluetooth operation in Chrome is now user-verified. In-app browser support and subjective long-session controller feel remain separately unverified. No driver, firmware, pairing or browser flag changes were needed. Clearer power-on/activation and sleep/disconnect messages were added to prevent confusing an idle controller with an application failure.
 
 
 ## Single-stick and slight-assist follow-up
 
 The user requested simpler controls and a very slight nudge after confirming physical Xbox use. Left stick now sets movement/facing; optional right stick overrides manual aim. Assistance uses a 12-degree forward cone with 25% correction capped at 3 degrees and does not accumulate into a lock. Controller-assist unit checks pass. In-browser verification measured 1.5 degrees for a six-degree target offset, verified reticle/shot agreement, and rejected targets outside the cone or behind cover. Evidence: output/controller-assist-browser.txt and tests/controller-assist.mjs. Native probing is available as tools/controller_diagnostics.py. Further subjective tuning waits for user review.
+
+
+## Controller diagnostics
+
+Start with the activation steps in [QUICKSTART.md](QUICKSTART.md#xbox-controller). A remembered Bluetooth pairing or an OK Windows PnP entry does not prove a live controller connection. Native XInput previously reported error 1167 (device unavailable), and Chrome exposed an empty controller list until the successful connection described above. The exact cause of every earlier failed attempt was not established.
+
+For a read-only Windows connection check, with Python installed:
+
+```powershell
+python tools/controller_diagnostics.py
+```
+
+The tool reports classic Bluetooth connected/remembered/paired state and XInput slot state. Its Bluetooth enumeration does not cover Bluetooth LE devices. It does not change pairing, drivers, firmware, or settings.
+
+Browser input requires a visible, activated page and controller interaction. The application polls current Gamepad objects and accepts standard mappings. Simulated controller fixtures prove application mappings and logic, not physical connectivity or subjective stick feel.
+
+Primary references used during implementation:
+
+- [W3C Gamepad specification](https://www.w3.org/TR/gamepad/) for standard button/axis mapping and interaction gating.
+- [MDN Gamepad guide](https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API) for polling and connection handling.
+- [Microsoft XInputGetState](https://learn.microsoft.com/en-us/windows/win32/api/xinput/nf-xinput-xinputgetstate) for native connection results.
+- [Microsoft Bluetooth device state](https://learn.microsoft.com/en-us/windows/win32/api/bluetoothapis/ns-bluetoothapis-bluetooth_device_info_struct) and [enumeration limits](https://learn.microsoft.com/en-us/windows/win32/api/bluetoothapis/nf-bluetoothapis-bluetoothfindfirstdevice).

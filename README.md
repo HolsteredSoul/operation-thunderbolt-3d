@@ -103,4 +103,4 @@ node tests/controller-assist.mjs
 
 The `tests/*.cjs` files are Playwright CLI function snippets for a running game, not Playwright Test specifications. Browser tooling is optional and is not needed to play. `window.__OT3D` exposes controlled browser-verification helpers.
 
-See [VERIFICATION.md](VERIFICATION.md) for recorded test results, playthroughs, measured performance, and limitations; [CONTROLLER-NOTES.md](CONTROLLER-NOTES.md) for controller diagnostics; and [AMMO-BALANCE-REVIEW.md](AMMO-BALANCE-REVIEW.md) for the ammo design review.
+See [VERIFICATION.md](VERIFICATION.md) for recorded test results, controller diagnostics, measured performance, and limitations. [BALANCE.md](BALANCE.md) records the ammo rationale and current combat values; [QUICKSTART.md](QUICKSTART.md) covers player setup and troubleshooting.

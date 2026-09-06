@@ -1,31 +1,34 @@
-# Operation Thunderbolt 3D — agent entry point
+# Operation Thunderbolt 3D â€” development guidance
 
-@PROJECT.md
-@memory/MEMORY.md
+## Current state
 
-## Rules
-1. The user requested a finished first version, then a stop for review. Do not start another pass without their request.
-2. Current code is authoritative; the original GAME_MEMORY.md was stale. Preserve C:/DEV/Thunderbolt_WWII.
-3. Read BALANCE.md before changing gameplay. Do not change retained balance without observed evidence and an explanation.
-4. Use Blender MCP only for Blender work, preserve the cottage and asset checkpoints, favor Solid viewport, and avoid GPU renders given the prior driver crash.
-5. Verify changed behavior, not only syntax. Separate automated/controlled checks from normal browser-input playthroughs and human playtesting.
-6. Keep all runtime assets and rendering dependencies local. No extra systems beyond survival.
-7. Check memory/rejected-approaches.md before reviving an approach. Update project status at session end.
+The playable survival game, Blender asset passes, ammo recovery, and single-stick Xbox controls are implemented. Physical Xbox Bluetooth operation is user-confirmed in Chrome; in-app preview support and extended controller feel remain separately unverified. The current artwork is approved, including the compact kneeling sniper correction.
 
-## Build / test / run
-- No build/install required.
-- `npm start` — http://127.0.0.1:8083, Node 20+.
-- `npm test` — simulation and 20 fixed seeds; takes several minutes.
-- `tests/*.cjs` — Playwright CLI browser function snippets against the local server.
-- Browser artifacts and raw measurements: output/ (gitignored); summarized in VERIFICATION.md.
+The personal repository is https://github.com/HolsteredSoul/operation-thunderbolt-3d. It remains private; GitHub Pages publication has not been enabled. Windows users can double-click `gamestart.cmd`. Obsolete plans and duplicate status/memory notes have been removed, with lasting decisions consolidated here and technical evidence retained in the documents below.
 
-## Code map
-| Concern | Entry |
-|---|---|
-| State, collision, fixed-step combat | src/core.js |
-| Seeded villages and route grid | src/layout.js |
-| Source-derived behavior | src/player.js, src/enemies.js, src/supplies.js, src/audiofx.js |
-| Browser input, rendering, HUD, camera | src/app.js |
-| Blender mesh loading and instancing | src/visuals.js |
-| Editable asset workshop and runtime pack | assets/thunderbolt-workshop.blend, assets/village-pack.json |
-| Launch and evidence | README.md, BALANCE.md, VERIFICATION.md |
+## Working rules
+
+1. Work within the user's requested scope. Do not start unsolicited visual, balance, progression, or game-mode passes. Keep this a survival game unless the user requests otherwise.
+2. Current code is authoritative. Preserve the separate original project at `C:/DEV/Thunderbolt_WWII`; it is not a runtime dependency.
+3. Read [BALANCE.md](BALANCE.md) before gameplay changes. The user finds the game challenging: preserve enemy pressure when refining ammo recovery, and explain balance changes with observed evidence.
+4. Use Blender MCP for Blender work. Preserve the cottage and asset checkpoints, save small steps, use Solid viewport, and avoid GPU rendering because of the earlier driver crash.
+5. Preserve distinct soldier silhouettes, persistent role names/symbols, and the player's YOU marker unless the user requests changes.
+6. Controller preference: left-stick movement/facing, optional right-stick override, and only slight assistance (12-degree cone, 25% correction, 3-degree cap, no accumulating lock). Keep mouse aiming unassisted. Do not restore mandatory twin-stick aiming or full automatic targeting without a user request.
+7. Verify changed behavior and separate controlled tests, ordinary browser playthroughs, and human hardware testing. Simulated gamepads do not prove physical input. Preserve power-on/click/press-A guidance; pairing alone is not live connectivity.
+8. Keep runtime assets and rendering dependencies local. No additional runtime services are required.
+9. Keep documentation current and concise. Use Git history for completed work rather than session journals; update this current-state summary when needed. Do not add workflow-enforcement hooks unless the user asks after repeated convention failures.
+
+## Run and verify
+
+- Double-click `gamestart.cmd`, or run `npm start`: http://127.0.0.1:8083. Node.js 20+; no install or build step.
+- `npm test`: simulation and 20 fixed seeds; takes several minutes.
+- `node tests/gameplay-refinements.mjs`: ammo recovery and controller input checks.
+- `node tests/controller-assist.mjs`: facing and slight assistance checks.
+- `tests/*.cjs`: Playwright CLI browser function snippets, not Playwright Test specifications.
+- Raw browser artifacts and measurements are gitignored under `output/`; recorded evidence and limitations are in [VERIFICATION.md](VERIFICATION.md).
+
+## Documentation and code
+
+[README.md](README.md) describes features, controls, and the code map. [QUICKSTART.md](QUICKSTART.md) covers launch and troubleshooting. [BALANCE.md](BALANCE.md) records combat values and design rationale. [VERIFICATION.md](VERIFICATION.md) records test evidence and controller diagnostics.
+
+Core combat is in `src/core.js`, `src/player.js`, `src/enemies.js`, and `src/supplies.js`; generation is in `src/layout.js` and `src/ammo-placement.js`; browser input/rendering is in `src/app.js`, `src/input.js`, and `src/visuals.js`. Editable models are in `assets/thunderbolt-workshop.blend`; the runtime pack is `assets/village-pack.json`.

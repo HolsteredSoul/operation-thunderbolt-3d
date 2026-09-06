@@ -76,7 +76,7 @@ Menu navigation highlights buttons rather than moving the mouse pointer. Adjust 
 | Browser cannot connect | Keep the server terminal open and use the exact URL it prints. Check it for errors. |
 | Blank page after opening `index.html` | Run the server and open its HTTP URL. Opening the file directly is unsupported. |
 | WebGL error or poor performance | Use a browser with WebGL 2 and hardware acceleration available. Try the game's quality button to reduce rendering cost. |
-| Controller does not respond | Power it back on, verify its connection, click the Chrome game page, and press A. Try a USB data cable. See [controller notes](CONTROLLER-NOTES.md). |
+| Controller does not respond | Power it back on, verify its connection, click the Chrome game page, and press A. Try a USB data cable. See [controller diagnostics](VERIFICATION.md#controller-diagnostics). |
 | No audio | Click the game to allow browser audio, check system volume, and press M to unmute if needed. |
 | Game pauses after switching windows | This is expected. Return to the game and resume. |
 

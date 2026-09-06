@@ -31,7 +31,13 @@ Four stacks per upgrade: damage +6 (58 maximum); interval −.025 s (.06 minimum
 
 Medical supplies restore 35 HP, or give eight reserve rounds when already at full health. Ammo supplies give 16 reserve rounds, capped at 160. Ordinary ammo expires after 30 s; medical supplies and upgrades expire after 14 s. Timed pickups blink in their last three seconds and magnetize inside 90 units at 140 units/s with clear sight.
 
-At 16 or fewer total rounds (loaded plus reserve), one guaranteed emergency ammo pickup appears. It grants 24 reserve rounds, remains until collected and can recur after later depletion. Placement prefers a 100–180-unit walk-grid route and avoids occupied or exposed locations where possible, with a nearby reachable fallback. It has no kill requirement, cost or recovery cooldown. The player still collects and reloads normally; reserve remains capped at 160. Placement has its own seeded RNG and does not consume combat random numbers. This deliberately reduces ammo starvation without increasing enemy pressure. See AMMO-BALANCE-REVIEW.md for the budget analysis.
+At 16 or fewer total rounds (loaded plus reserve), one guaranteed emergency ammo pickup appears. It grants 24 reserve rounds, remains until collected and can recur after later depletion. Placement prefers a 100–180-unit walk-grid route and avoids occupied or exposed locations where possible, with a nearby reachable fallback. It has no kill requirement, cost or recovery cooldown. The player still collects and reloads normally; reserve remains capped at 160. Placement has its own seeded RNG and does not consume combat random numbers. This deliberately reduces ammo starvation without increasing enemy pressure.
+
+### Why guaranteed recovery is needed
+
+Dedicated ammo drops occur with probability 0.95 × 0.22 × 0.60 = 12.54% per kill, yielding 2.0064 rounds per kill on average before expiry, missed collection, and reserve-cap waste. Wave 1 has a 39.1% chance of generating no dedicated ammo drop. Medical pickups can provide ammo at full health, but cannot guarantee recovery from zero ammunition.
+
+At an illustrative 50% hit rate, a 24-round recovery buys about 12 hits, compared with 8 from a 16-round reward. A wave-4 MG nest needs 11 hits at starting damage. These are analytical budgets, not measured player accuracy or guaranteed kills. The user already finds combat challenging: recovery reduces empty running without raising enemy pressure. Judge further tuning by reachable supplies, repeat recovery, empty time, and damage taken while collecting, rather than a forced win-rate target.
 
 ## Adaptation differences
 
