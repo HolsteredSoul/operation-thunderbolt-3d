@@ -13,7 +13,7 @@ No missions beyond survival, elevation mechanics, extra progression, mobile cont
 - **Phase:** 3 — verified first version; awaiting review.
 - **Last done:** Complete local game with Blender MCP asset pack, source combat modules, deterministic connected villages, browser verification and measured 34-enemy performance. See VERIFICATION.md.
 - **Next action:** User review only. Do not start another polish cycle without a request.
-- **Synced to:** First-version implementation commit (see git log); 2026-09-06.
+- **Synced to:** 27afd57 — 2026-09-06. Implementation and verification anchor.
 
 ## Slips
 - Quick-tap reload initially depended on a held key reaching a frame; fixed to start on keydown and verified through browser input.
