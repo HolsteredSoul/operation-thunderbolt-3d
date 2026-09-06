@@ -9,7 +9,7 @@ const ambient=new THREE.HemisphereLight('#f2eddb','#4c624e',2.25);scene.add(ambi
 const sun=new THREE.DirectionalLight('#ffe2af',3.2);sun.position.set(550,1200,300);sun.target.position.set(1200,0,900);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-1500,right:1500,top:1500,bottom:-1500,near:10,far:3500});sun.shadow.bias=-.0003;sun.shadow.normalBias=1;sun.shadow.radius=3;scene.add(sun,sun.target);
 const dynamic=new Batcher(scene,true),models=new Map(),effectRoot=new THREE.Group();
 const contactGeo=new THREE.CircleGeometry(1,20),contactMat=new THREE.MeshBasicMaterial({color:'#25352a',transparent:true,opacity:.25,depthWrite:false});
-const ROLE_STYLE={rifleman:{label:'RIFLEMAN',height:53,width:13,color:'#adc7d8'},officer:{label:'OFFICER',height:51,width:14,color:'#e4bd78'},sniper:{label:'SNIPER',height:47,width:18,color:'#b9ca8a'},nest:{label:'MG NEST',height:46,width:37,color:'#e0b092'}};
+const ROLE_STYLE={rifleman:{label:'RIFLEMAN',height:53,width:13,color:'#a5cde9',badge:'RIFLE'},officer:{label:'OFFICER',height:51,width:14,color:'#ffd084',badge:'OFFICER'},sniper:{label:'SNIPER',height:47,width:18,color:'#ffa18d',badge:'SNIPER'},nest:{label:'MG NEST',height:46,width:37,color:'#d6bbf5',badge:'MG NEST'}};
 const raycaster=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),-29),aimPoint=new THREE.Vector3(),pointer=new THREE.Vector2();
 let destroyVillage=()=>{},width=0,height=0,last=0,accum=0,uiT=0,toastT=0,frames=[],cpuFrames=[],frameCount=0;
 const bulletGeo=new THREE.BufferGeometry(),bulletPositions=new Float32Array(240*6),bulletColors=new Float32Array(240*6);
@@ -50,10 +50,35 @@ function renderModels(){
   let n=0;for(const b of G.bullets){const a=Math.atan2(b.vy,b.vx),c=new THREE.Color(b.color);bulletPositions.set([b.x-Math.cos(a)*20,29,b.y-Math.sin(a)*20,b.x,29,b.y],n*6);bulletColors.set([c.r,c.g,c.b,c.r,c.g,c.b],n*6);n++;}
   bulletGeo.setDrawRange(0,n*2);bulletGeo.attributes.position.needsUpdate=true;bulletGeo.attributes.color.needsUpdate=true;
 }
+// Persistent recognition badges use words AND distinct shapes, independent of uniform color.
+// They are canvas-only, so they never intercept aiming or mouse input.
+function drawRoleBadges(items){
+  const placed=[];ctx.font='bold 11px Consolas';
+  for(const item of items){
+    const {x,y,type,color,label}=item,w=Math.ceil(ctx.measureText(label).width)+30,h=22;
+    let bx=U.clamp(x-w/2,8,width-w-8),by=y-28;
+    // Move crowded badges above one another; a leader keeps the actor association clear.
+    for(let n=0;n<8&&placed.some(r=>bx<r.x+r.w+3&&bx+w+3>r.x&&by<r.y+r.h+3&&by+h+3>r.y);n++)by-=25;
+    by=Math.max(92,by);placed.push({x:bx,y:by,w,h});
+    ctx.strokeStyle=color;ctx.lineWidth=1;ctx.globalAlpha=.7;
+    ctx.beginPath();ctx.moveTo(bx+w/2,by+h);ctx.lineTo(x,y-2);ctx.stroke();ctx.globalAlpha=1;
+    ctx.fillStyle='#101c1af0';ctx.fillRect(bx,by,w,h);ctx.fillStyle=color;ctx.fillRect(bx,by,3,h);
+    ctx.save();ctx.translate(bx+14,by+11);ctx.strokeStyle=color;ctx.lineWidth=1.5;
+    ctx.beginPath();
+    if(type==='rifleman'){ctx.rect(-2,-6,4,11);ctx.moveTo(-2,-6);ctx.lineTo(0,-9);ctx.lineTo(2,-6);}
+    else if(type==='officer'){for(const dy of[-4,2]){ctx.moveTo(-5,dy+3);ctx.lineTo(0,dy-1);ctx.lineTo(5,dy+3);}}
+    else if(type==='sniper'){ctx.arc(0,0,5,0,TAU);ctx.moveTo(-8,0);ctx.lineTo(8,0);ctx.moveTo(0,-8);ctx.lineTo(0,8);}
+    else if(type==='nest'){ctx.rect(-6,-5,12,10);for(const dx of[-3,0,3]){ctx.moveTo(dx,-3);ctx.lineTo(dx,3);}}
+    else{ctx.moveTo(0,-6);ctx.lineTo(6,0);ctx.lineTo(0,6);ctx.lineTo(-6,0);ctx.closePath();}
+    ctx.stroke();ctx.restore();
+    ctx.fillStyle='#f7f2df';ctx.textAlign='left';ctx.fillText(label,bx+25,by+15);
+  }
+}
 function drawOverlay(){
   ctx.clearRect(0,0,width,height);if(G.state==='menu')return;
-  const p=G.player,pp=project(p.x,p.y,1);
-  ctx.strokeStyle=p.invulnT>0?'#e39c74':'#e5dab3';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(pp.x,pp.y,19*height/680,10*height/680,0,0,TAU);ctx.stroke();
+  const p=G.player,pp=project(p.x,p.y,1),badges=[];
+  if(p.hp>0){const a=project(p.x,p.y,60);badges.push({...a,type:'player',color:'#a5eed6',label:'YOU'});}
+  ctx.strokeStyle=p.invulnT>0?'#e39c74':'#a5eed6';ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(pp.x,pp.y,19*height/680,10*height/680,0,0,TAU);ctx.stroke();
   // Threat bearings make distant stationary enemies findable.
   for(const e of G.enemies){
     const s=project(e.x,e.y,ROLE_STYLE[e.type].height+9),off=s.x<24||s.x>width-24||s.y<90||s.y>height-140;
@@ -61,9 +86,11 @@ function drawOverlay(){
       ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(dy,dx));ctx.fillStyle=e.telegraphT>0?'#ff715c':'#e4af81';ctx.beginPath();ctx.moveTo(6,0);ctx.lineTo(-4,-4);ctx.lineTo(-4,4);ctx.fill();ctx.restore();
       if(e.type==='sniper'||e.type==='nest'){ctx.fillStyle='#f0d4b0';ctx.font='9px Consolas';ctx.textAlign='center';ctx.fillText(e.type==='sniper'?'S':'MG',x,y+17);}
     }
+    if(!e.dead&&!off){const role=ROLE_STYLE[e.type];badges.push({...s,type:e.type,color:role.color,label:role.badge});}
     if(e.hp<e.maxHp&&!off){ctx.fillStyle='#15221fc9';ctx.fillRect(s.x-16,s.y-3,32,4);ctx.fillStyle='#d69979';ctx.fillRect(s.x-16,s.y-3,32*e.hp/e.maxHp,4);}
     if(e.telegraphT>0){const a=project(e.x,e.y,29),b=project(e.laserX,e.laserY,29);ctx.strokeStyle='#ff6655';ctx.lineWidth=1.5+(1-e.telegraphT/1.4);ctx.setLineDash([8,5]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(b.x,b.y,10,0,TAU);ctx.stroke();ctx.fillStyle='#ffb49c';ctx.font='bold 11px Consolas';ctx.textAlign='center';ctx.fillText('SNIPER · BREAK SIGHT',width/2,103);}
   }
+  drawRoleBadges(badges);
   for(const pk of G.pickups){const s=project(pk.x,pk.y,23);ctx.font='bold 11px Consolas';ctx.textAlign='center';ctx.fillStyle='#fff5dc';ctx.fillText(({health:'+',ammo:'≡',dmg:'D',fireRate:'F',mag:'M',maxHp:'H'})[pk.type],s.x,s.y);}
   const vis=G.ui.getVisuals();for(const f of vis.floats){const s=project(f.x,f.y,58);ctx.globalAlpha=Math.max(0,1-f.t/f.life);ctx.fillStyle=f.color;ctx.font='bold 12px Consolas';ctx.textAlign='center';ctx.fillText(f.text,s.x,s.y);}ctx.globalAlpha=1;
   if(vis.flashT>0){ctx.fillStyle=`rgba(156,44,26,${vis.flashT*.5})`;ctx.fillRect(0,0,width,height);}

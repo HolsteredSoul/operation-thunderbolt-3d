@@ -64,3 +64,12 @@ The reticle now names the selected enemy role. Its silhouette selection bounds m
 All four enemy types were selected correctly by aiming at their visible upper bodies. The side-by-side screenshot at output/playwright/role-comparison.png uses actual gameplay scale; the role labels in that comparison are QA annotations. The production game displays a role name on aim. All 15 browser control/state/targeting checks passed again, including three viewport sizes and head-target projectile kills.
 
 The same 34-enemy, 1080p headed Chrome / Iris Xe workload measured 88.5 FPS mean on High (20 ms p95 frame, 7.7 ms median CPU work) and 97.4 FPS on Low. These short-run differences from the first measurement are not claims of a further optimization. Raw results: output/role-readability.txt, output/role-browser-checks.txt and output/role-performance.txt. No simulation or generation code changed, so the previously completed seed and combat invariant results still apply.
+
+
+## Persistent role identification - follow-up review
+
+The user still found soldiers difficult to identify during play. Persistent, high-contrast labels now name every enemy in the visible combat area: RIFLE (cartridge symbol), OFFICER (double chevron), SNIPER (crosshair), MG NEST (gun-emplacement symbol). Words and shapes supplement the existing Blender silhouettes and colors. The player has a mint YOU badge and ground ring. Crowded labels shift vertically with leaders connecting them to their actors. The overlay does not intercept input.
+
+All five labels were verified while the mouse was away from every actor and no aim target existed. The production badges were inspected at 1080p, captured at 720p, and inspected under the 34-enemy stress setup. Fifteen existing browser controls/targeting/state checks were rerun. The same Iris Xe / headed Chrome / 1080p stress setup measured 91.4 FPS mean on High with a 20 ms p95 frame. This is a short-run measurement, not a claim of additional performance optimization.
+
+Evidence: output/persistent-role-badges.txt, output/badges-browser-checks.txt, output/badges-performance.txt and output/playwright/persistent-role-badges.png. This pass changes combat overlays only; model geometry, camera projection, collision, statistics, AI and generation are unchanged.
